@@ -3,14 +3,16 @@ import React from 'react'
 import Link from 'next/link'
 import { DropdownMenu, Button } from '@radix-ui/themes'
 import { usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 const Navbar = () => {
   const pathname = usePathname()
- 
+  const router = useRouter()
+
   return (
     <nav className='flex justify-between px-8 items-center h-18 bg-white shadow-md'>
       <div className='flex flex-col justify-center items-center gap-1'>
-        <div className='text-4xl font-bold'>
+        <div onClick={() => router.push('/')} className='text-4xl font-bold cursor-pointer'>
           <span className='text-blue-600'>O</span>
           <span className='text-blue-900'>z</span>
           <span className='text-purple-600'>O</span>

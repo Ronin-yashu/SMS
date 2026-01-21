@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
+import SessionWrapper from "@/components/SessionWrapper";
 
 
 const geistSans = Geist({
@@ -24,15 +25,17 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Theme >
-          <Navbar />
-          {children}
-          <Footer />
-        </Theme>
-      </body>
+      <SessionWrapper>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <Theme >
+            <Navbar />
+            {children}
+            <Footer />
+          </Theme>
+        </body>
+      </SessionWrapper>
     </html>
   );
 }
