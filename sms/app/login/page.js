@@ -2,17 +2,24 @@
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { Login_Function } from '@/actions/Login_Function'
-import { FaGoogle , FaGithub} from "react-icons/fa";
+import { FaGoogle, FaGithub } from "react-icons/fa";
 import Link from 'next/link'
 import { useSession, signIn, signOut } from "next-auth/react"
 import { useRouter } from 'next/navigation'
-
+import { useDispatch } from 'react-redux'
+import { AuthorizedTrue } from '@/redux/authorize/authorizeSlice';
+import { useSelector } from 'react-redux';
+import { store } from '@/redux/store';
 
 const Login = () => {
     const { data: session } = useSession()
     const router = useRouter();
+    const dispatch = useDispatch();
+    const isAuthorized = useSelector((state) => state.authorize.value);
     React.useEffect(() => {
         if (session) {
+            store.dispatch(AuthorizedTrue());
+            console.log(isAuthorized);
             router.push(`/${session.user.name}`);
         }
     }, [session])
@@ -49,11 +56,11 @@ const Login = () => {
 
                 <div className='w-1/2 h-full flex flex-col justify-center items-center gap-6'>
                     <h2 className='text-2xl font-semibold'>Login with your providers</h2>
-                    <button onClick={()=>signIn("github")} className='cursor-pointer flex justify-center items-center gap-2 bg-slate-100 py-3 w-64 rounded'>
+                    <button onClick={() => signIn("github")} className='cursor-pointer flex justify-center items-center gap-2 bg-slate-100 py-3 w-64 rounded'>
                         <FaGithub />
                         Login with GitHub
                     </button>
-                    <button onClick={()=>signIn("google")} className='cursor-pointer flex justify-center items-center gap-2 bg-slate-100 py-3 w-64  rounded'>
+                    <button onClick={() => signIn("google")} className='cursor-pointer flex justify-center items-center gap-2 bg-slate-100 py-3 w-64  rounded'>
                         <FaGoogle />
                         Login using Google
                     </button>
