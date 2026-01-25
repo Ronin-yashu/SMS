@@ -4,26 +4,22 @@ import { useForm } from 'react-hook-form'
 import { Login_Function } from '@/actions/Login_Function'
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import Link from 'next/link'
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useSession, signIn } from "next-auth/react"
 import { useRouter } from 'next/navigation'
-import { useDispatch } from 'react-redux'
-import { AuthorizedTrue } from '@/redux/authorize/authorizeSlice';
-import { useSelector } from 'react-redux';
-import { store } from '@/redux/store';
 
 const Login = () => {
-    const { data: session } = useSession()
-    const router = useRouter();
-    const dispatch = useDispatch();
-    const isAuthorized = useSelector((state) => state.authorize.value);
-    React.useEffect(() => {
-        if (session) {
-            store.dispatch(AuthorizedTrue());
-            console.log(isAuthorized);
-            router.push(`/${session.user.name}`);
-        }
-    }, [session])
 
+    const { data: session } = useSession()
+    console.log(session);
+    
+    const router = useRouter();
+
+    React.useEffect(() => {
+      if (session) {
+        router.push(`/${session.user.email.split("@")[0]}`); 
+      }
+    }, [session])
+    
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
     return (
         <div className='w-full h-[89vh]'>

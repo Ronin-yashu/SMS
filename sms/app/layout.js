@@ -5,7 +5,6 @@ import Footer from "@/components/Footer";
 import { Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
 import SessionWrapper from "@/components/SessionWrapper";
-import ReduxProvider from "@/components/ReduxProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,13 +26,11 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <SessionWrapper>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          <ReduxProvider>
             <Theme >
               <Navbar />
               {children}
               <Footer />
             </Theme>
-          </ReduxProvider>
         </body>
       </SessionWrapper>
     </html>

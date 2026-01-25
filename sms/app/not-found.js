@@ -1,11 +1,18 @@
 "use client"
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import { useSelector } from 'react-redux'
+import { useSession } from 'next-auth/react';
 
 export default function NotFound() {
-  const isAuthorized = useSelector((state) => state.authorize.value);
-  console.log(isAuthorized);
+  const { status } = useSession();
+  if (status === "unauthenticated") {
+    var isAuthorized = false;
+    console.log(isAuthorized);
+    
+  } else {
+    var isAuthorized = true;
+    console.log(isAuthorized);
+  }
   
   return (
     <section className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-6">

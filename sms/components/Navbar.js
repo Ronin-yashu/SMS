@@ -4,11 +4,12 @@ import Link from 'next/link'
 import { DropdownMenu, Button } from '@radix-ui/themes'
 import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
+import { signOut , useSession } from 'next-auth/react'
 
 const Navbar = () => {
   const pathname = usePathname()
   const router = useRouter()
-
+  const { data: session } = useSession()
   return (
     <nav className='flex justify-between px-8 items-center h-18 bg-white shadow-md'>
       <div className='flex flex-col justify-center items-center gap-1'>
@@ -59,7 +60,9 @@ const Navbar = () => {
         </DropdownMenu.Root>
       </ul>
       <div className='flex gap-4 justify-center items-center'>
-        {pathname !== "/login" && <Link className='text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-2xl rounded-base text-sm px-4 py-2.5 text-center leading-5' href="/login">Sign-in</Link>}
+
+        {pathname === "/login" ? null : session ? <button onClick={() => signOut({ callbackUrl: '/login' })} className='text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-2xl rounded-base text-sm px-4 py-2.5 text-center leading-5'>Sign-out</button> : <Link className='text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-2xl rounded-base text-sm px-4 py-2.5 text-center leading-5' href="/login">Sign-in</Link> }
+
       </div>
     </nav>
   )
