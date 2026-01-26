@@ -41,9 +41,9 @@ const Login = () => {
                     <form className='flex flex-col w-2/3 h-3/4 gap-6 justify-center items-center rounded-lg' onSubmit={handleSubmit((data) => Login_Function(data))}>
                         <h2 className='text-2xl font-semibold'>Login using your credentials</h2>
                         <input className='border border-slate-400 py-2 text-black px-13 rounded-2xl' {...register("email", { required: true, message: "Email is required" })} type='email' placeholder='Enter your Email Address' />
-                        {errors.email && <span className='text-red-600'>Email is required</span>}
-                        <input className='border border-slate-400 py-2 text-black px-13 rounded-2xl' type="password" {...register("password", { required: true, message: "Password is required" })} placeholder='Enter your Password' />
-                        {errors.password && <span className='text-red-600'>Password is required</span>}
+                        {errors.email && <span >Email is required</span>}
+                        <input className='border border-slate-400 py-2 text-black px-13 rounded-2xl' type="password" {...register("password", { required: {value:true,message:"password  is required"}, minLength : {value : 8 , message : "Password must be 8 characters"} })} placeholder='Enter your Password' />
+                        {errors.password && errors.password.message}
                         <button type="submit" className='bg-blue-600 text-white rounded-md px-4 py-2 mt-4' disabled={isSubmitting}>Login</button>
                     </form>
                 </div>
