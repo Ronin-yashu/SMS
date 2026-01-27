@@ -64,7 +64,7 @@ const step5Schema = z.object({
 });
 
 export default function SchoolRegistrationForm() {
-    const [currentStep, setCurrentStep] = useState(1);
+    const [currentStep, setCurrentStep] = useState(5);
     const [formData, setFormData] = useState({});
     const totalSteps = 5;
 
