@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model school {
+  schoolName String
+  schoolType String
+  establishmentYear String
+  schoolCode String @unique
+  udiseCode String?
+  schoolCategory String
+  officialEmail String @unique
+  landlineNumber String?
+  mobileNumber String @unique
+  alternativeMobile String?
+  website String?
+  schoolAddress String
+  city String
+  state String
+  pinCode String
+  country String
+  adminName String
+  adminDesignation String
+  adminEmail String @unique
+  adminPassword String
+  confirmPassword String
+  adminMobile String @unique
+  studentStrength String
+  teachingStaff String
+  nonTeachingStaff String
+  totalClasses String
+  mediumOfInstruction String[]
+  streamsOffered String[]
+  plan String
+  billingCycle String
+  termsAccepted Boolean
+  privacyAccepted Boolean
+  createdAt DateTime @default(now())
+}

@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { ChevronLeft, ChevronRight, Check, Building2, Mail, User, Shield, Settings } from 'lucide-react';
 import { Select, Blockquote, CheckboxGroup, RadioCards, Flex, Text, Button } from "@radix-ui/themes";
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 // Combined schema - all fields optional to prevent re-initialization
 const formSchema = z.object({
@@ -241,14 +242,11 @@ const Register = () => {
 
     const onSubmit = async (data) => {
         const isValid = validateStep(data);
-        
         if (!isValid) {
             return;
         }
-
         const allData = { ...formData, ...data };
         setFormData(allData);
-
         if (currentStep < totalSteps) {
             nextStep();
         } else {
@@ -260,12 +258,15 @@ const Register = () => {
                     },
                     body: JSON.stringify(allData),
                 });
-                const result = await res.json();
-                console.log(result);
-                alert("School registered successfully!");
+                const result = await res.json()
+                if (res.ok) {
+                    notifySuccess(result)
+                }
+                else{
+                    notifyError(result)
+                }
             } catch (error) {
-                console.error("Registration error:", error);
-                alert("Registration failed. Please try again.");
+                notifyError(error)
             }
         }
     };
@@ -296,8 +297,8 @@ const Register = () => {
                                 w-12 h-12 rounded-full flex items-center justify-center font-semibold text-sm
                                 transition-all duration-300 transform
                                 ${currentStep > step.number ? 'bg-gradient-to-br from-green-400 to-green-600 text-white scale-100 shadow-lg' :
-                                currentStep === step.number ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white scale-110 shadow-xl animate-pulse' :
-                                'bg-white text-gray-400 border-2 border-gray-300 scale-90'}
+                                    currentStep === step.number ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white scale-110 shadow-xl animate-pulse' :
+                                        'bg-white text-gray-400 border-2 border-gray-300 scale-90'}
                             `}>
                                 {currentStep > step.number ? <Check size={20} /> : <Icon size={20} />}
                             </div>
@@ -328,6 +329,9 @@ const Register = () => {
             )}
         </div>
     );
+
+    const notifySuccess = (result) => toast.success('Registration Complete',result);
+    const notifyError = (error) => toast.error('Something went wrong ' ,error)
 
     return (
         <div className='min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12 px-4'>

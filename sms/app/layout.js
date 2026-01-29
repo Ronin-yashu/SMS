@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
 import SessionWrapper from "@/components/SessionWrapper";
+import { Toaster } from 'react-hot-toast'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +30,7 @@ export default function RootLayout({ children }) {
             <Theme >
               <Navbar />
               {children}
+              <Toaster/>
               <Footer />
             </Theme>
         </body>

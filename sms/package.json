@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@prisma/client": "^7.3.0",
     "@radix-ui/themes": "^3.2.1",
     "@reduxjs/toolkit": "^2.11.2",
     "@types/multer": "^2.0.0",
+    "dotenv": "^17.2.3",
     "lucide-react": "^0.562.0",
     "motion": "^12.27.0",
     "multer": "^2.0.2",
@@ -21,6 +23,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.1",
+    "react-hot-toast": "^2.6.0",
     "react-icons": "^5.5.0",
     "zod": "^4.3.6"
   },
@@ -28,6 +31,7 @@
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.1.3",
+    "prisma": "^7.3.0",
     "tailwindcss": "^4"
   }
 }

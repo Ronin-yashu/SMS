@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request) {
-    const data = await request.json()
-    console.log(data);
-    return NextResponse.json({success : true , data  })
+    try {
+        const data = await request.json()
+        const school = await prisma.school.create({ data })
+        return NextResponse.json(school, { status: 201 })
+    } catch (error) {
+        console.error('Error in registration of school:', error)
+        return NextResponse.json({ error: 'Failed to register school' }, { status: 500 })
+
+    }
 }
