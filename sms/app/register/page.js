@@ -48,9 +48,10 @@ const formSchema = z.object({
 const Register = () => {
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState({});
+    const [isLoading, setIsLoading] = useState(false);
     const totalSteps = 5;
 
-    const { register, handleSubmit, control, formState: { errors }, setError, clearErrors, getValues } = useForm({
+    const { register, handleSubmit, control, formState: { errors, isSubmitting }, setError, clearErrors, getValues, reset } = useForm({
         resolver: zodResolver(formSchema),
         mode: 'onSubmit', // Changed to onSubmit to prevent re-renders
         defaultValues: {
@@ -250,24 +251,47 @@ const Register = () => {
         if (currentStep < totalSteps) {
             nextStep();
         } else {
-            try {
-                const res = await fetch("api/registration", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(allData),
-                });
-                const result = await res.json()
-                if (res.ok) {
-                    notifySuccess(result)
+            setIsLoading(true);
+            const registrationPromise = new Promise(async (resolve, reject) => {
+                try {
+                    const response = await fetch("/api/registration", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(allData),
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        resolve(result);
+                    } else {
+                        reject(new Error(result.error || 'Registration failed'));
+                    }
+                } catch (error) {
+                    reject(error);
                 }
-                else{
-                    notifyError(result)
+            });
+            toast.promise(
+                registrationPromise,
+                {
+                    loading: 'Submitting your registration...',
+                    success: 'Registration completed successfully!',
+                    error: (err) => `Error: ${err.message}`,
                 }
-            } catch (error) {
-                notifyError(error)
-            }
+            ).then(() => {
+                setTimeout(() => {
+                    setCurrentStep(1);
+                    setFormData({});
+                    reset();
+                    setIsLoading(false);
+                }, 2000);
+            }).catch((error) => {
+                console.error('Registration error:', error);
+                setCurrentStep(1);
+                setIsLoading(false);
+            });
         }
     };
 
@@ -329,9 +353,6 @@ const Register = () => {
             )}
         </div>
     );
-
-    const notifySuccess = (result) => toast.success('Registration Complete',result);
-    const notifyError = (error) => toast.error('Something went wrong ' ,error)
 
     return (
         <div className='min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12 px-4'>
@@ -893,10 +914,10 @@ const Register = () => {
                             <Button
                                 type="button"
                                 onClick={prevStep}
-                                disabled={currentStep === 1}
+                                disabled={currentStep === 1 || isLoading}
                                 size="3"
                                 variant="soft"
-                                className={`flex items-center gap-2 ${currentStep === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'} transition-transform`}
+                                className={`flex items-center gap-2 ${currentStep === 1 || isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'} transition-transform`}
                             >
                                 <ChevronLeft size={20} /> Previous
                             </Button>
@@ -906,6 +927,7 @@ const Register = () => {
                                     type="button"
                                     onClick={handleSubmit(onSubmit)}
                                     size="3"
+                                    disabled={isLoading}
                                     className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 hover:scale-105 transition-transform"
                                 >
                                     Next <ChevronRight size={20} />
@@ -914,6 +936,7 @@ const Register = () => {
                                 <Button
                                     type="submit"
                                     size="3"
+                                    disabled={isLoading}
                                     className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-transform animate-pulse"
                                 >
                                     <Check size={20} /> Submit Registration
