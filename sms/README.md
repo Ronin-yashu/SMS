@@ -41,7 +41,7 @@ This is just the teaser. The real magic is in development.
 
 ### 📥 Check and Download Release
 
-[**View and download this release →**](https://github.com/yourusername/10-45/releases/tag/v0.1.0-teaser)
+[**View and download this release →**](https://github.com/Ronin-yashu/SMS/releases/tag/v0.1.0-teaser)
 
 ---
 
