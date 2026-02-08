@@ -2,6 +2,7 @@
 import { prisma } from '@/lib/prisma';
 import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { redirect } from 'next/navigation';
+import jwt from 'jsonwebtoken';
 
 const delay = (d) => {
   return new Promise((resolve) => setTimeout(resolve, d * 1000));
@@ -22,6 +23,7 @@ export const Login_Function = async (data) => {
       console.log("admin email is registered from " , school.schoolName);
       if (school.adminPassword == data.password) {
         console.log("password match");
+
         redirect(`/${data.email.split("@")[0]}`)
       }else{
         console.log("password doesn't match");
