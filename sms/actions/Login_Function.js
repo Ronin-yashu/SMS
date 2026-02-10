@@ -3,14 +3,16 @@ import { prisma } from '@/lib/prisma';
 import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { redirect } from 'next/navigation';
 import jwt from 'jsonwebtoken';
+import { cookies } from 'next/headers';
 
 const delay = (d) => {
   return new Promise((resolve) => setTimeout(resolve, d * 1000));
 }
 
 export const Login_Function = async (data) => {
+  const cookieStore = await cookies()
   await delay(2);
-  console.log("upcoming email",data.email);
+  console.log("upcoming email", data.email);
   try {
     const school = await prisma.school.findUnique({
       where: {
@@ -19,13 +21,24 @@ export const Login_Function = async (data) => {
     })
     if (school == null) {
       console.log("school is null or cannot find");
-    }else{
-      console.log("admin email is registered from " , school.schoolName);
+    } else {
+      console.log("admin email is registered from ", school.schoolName);
       if (school.adminPassword == data.password) {
         console.log("password match");
-
+        const payload = { email: data.email.split("@")[0], isAuthenticated: true }
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+        // console.log(token,"from login page");
+        cookieStore.set({
+          name: 'manually-session-token',     // Name of the cookie
+          value: token,             // The JWT token itself
+          httpOnly: true,           // Crucial for security (prevents client-side JS access)
+          secure: process.env.NODE_ENV === 'development', // Use 'secure' in production
+          maxAge: 60 * 60,          // Cookie expiry (1 hour)
+          path: '/',                // Path where the cookie is valid
+          sameSite: 'strict',       // Helps prevent CSRF attacks
+        });
         redirect(`/${data.email.split("@")[0]}`)
-      }else{
+      } else {
         console.log("password doesn't match");
       }
     }
@@ -33,7 +46,7 @@ export const Login_Function = async (data) => {
     if (isRedirectError(error)) {
       throw error; // Re-throw the redirect error
     }
-    console.log("Something went wrong",error);
+    console.log("Something went wrong", error);
   }
 }
 

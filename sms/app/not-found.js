@@ -21,7 +21,7 @@ export default function NotFound() {
 
       {isAuthorized ? <h2 className="text-2xl font-semibold text-gray-700 ">Oops! Page not found</h2> : <h2 className="text-2xl font-semibold text-gray-700 ">Oops! You are not authorized</h2>}
 
-      {isAuthorized ? <p className="text-gray-500 mb-8 text-center max-w-md">The page you're looking for doesn't exist or has been moved.</p> : <p className="text-gray-500 mb-8 text-center max-w-md">You are not authorized to access this page.</p>}
+      {isAuthorized ? <p className="text-gray-500 mb-8 text-center max-w-md">The page you&apos;re looking for doesn&apos;t exist or has been moved.</p> : <p className="text-gray-500 mb-8 text-center max-w-md">You are not authorized to access this page.</p>}
 
       {isAuthorized ? <Link href="/" className="px-8 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition shadow-md">
         Return Home
