@@ -8,15 +8,18 @@ import { useSession, signIn } from "next-auth/react"
 import { useRouter } from 'next/navigation'
 import { getCookie } from 'cookies-next';
 import jwt from "jsonwebtoken"
+import { usePathname } from 'next/navigation'
 
 const Login = () => {
     const { data: session } = useSession()
     const router = useRouter();
-    console.log(session);
+    console.log("sessiom is : ",session);
+    const pathname = usePathname()
 
-    React.useEffect(() => {
+    if (pathname=='/login') {
         try {
             const token = getCookie('manually-session-token');
+            console.log("token is ",token);
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             if (session) {
                 router.push(`/${session.user.email.split("@")[0]}`);
@@ -26,7 +29,7 @@ const Login = () => {
         } catch (error) {
             console.log(error);
         }
-    }, [])
+    }
 
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
     return (

@@ -34,7 +34,7 @@ export const Login_Function = async (data) => {
           secure: process.env.NODE_ENV === 'production', 
           maxAge: 60 * 60,          
           path: '/',                
-          sameSite: 'strict',       
+          sameSite: 'lax',       
         });
         redirect(`/${data.email.split("@")[0]}`)
       } else {
