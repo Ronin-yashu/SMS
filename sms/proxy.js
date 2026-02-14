@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import { getServerSession } from 'next-auth';
-// This function can be marked `async` if using `await` inside
 export async function proxy(request) {
   const cookieStore = await cookies()
   const { pathname } = request.nextUrl;

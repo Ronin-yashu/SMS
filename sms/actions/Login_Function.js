@@ -43,7 +43,7 @@ export const Login_Function = async (data) => {
     }
   } catch (error) {
     if (isRedirectError(error)) {
-      throw error; // Re-throw the redirect error
+      throw error;
     }
     console.log("Something went wrong", error);
   }
