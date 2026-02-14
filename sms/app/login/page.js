@@ -6,20 +6,28 @@ import { FaGoogle, FaGithub } from "react-icons/fa";
 import Link from 'next/link'
 import { useSession, signIn } from "next-auth/react"
 import { useRouter } from 'next/navigation'
+import { getCookie } from 'cookies-next';
+import jwt from "jsonwebtoken"
 
 const Login = () => {
-
     const { data: session } = useSession()
-    console.log(session);
-    
     const router = useRouter();
+    console.log(session);
 
     React.useEffect(() => {
-      if (session) {
-        router.push(`/${session.user.email.split("@")[0]}`); 
-      }
-    }, [session])
-    
+        try {
+            const token = getCookie('manually-session-token');
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            if (session) {
+                router.push(`/${session.user.email.split("@")[0]}`);
+            } else if (decoded !== undefined) {
+                router.push(`/${decoded.username}`);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }, [])
+
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
     return (
         <div className='w-full h-[89vh]'>
@@ -42,7 +50,7 @@ const Login = () => {
                         <h2 className='text-2xl font-semibold'>Login using your credentials</h2>
                         <input className='border border-slate-400 py-2 text-black px-13 rounded-2xl' {...register("email", { required: true, message: "Email is required" })} type='email' placeholder='Enter your Email Address' />
                         {errors.email && <span >Email is required</span>}
-                        <input className='border border-slate-400 py-2 text-black px-13 rounded-2xl' type="password" {...register("password", { required: {value:true,message:"password  is required"}, minLength : {value : 8 , message : "Password must be 8 characters"} })} placeholder='Enter your Password' />
+                        <input className='border border-slate-400 py-2 text-black px-13 rounded-2xl' type="password" {...register("password", { required: { value: true, message: "password  is required" }, minLength: { value: 8, message: "Password must be 8 characters" } })} placeholder='Enter your Password' />
                         {errors.password && errors.password.message}
                         <button type="submit" className='bg-blue-600 text-white rounded-md px-4 py-2 mt-4' disabled={isSubmitting}>Login</button>
                     </form>
@@ -61,7 +69,7 @@ const Login = () => {
                         Login using Google
                     </button>
                     <div className='flex gap-32 mt-6'>
-                        <Link className='text-blue-600' href="/register">Don't have an account? Sign Up</Link>
+                        <Link className='text-blue-600' href="/register">Don&apos;t have an account? Sign Up</Link>
                         <Link className='text-blue-600' href="/forgot-password">Forgot Password ?</Link>
                     </div>
                 </div>

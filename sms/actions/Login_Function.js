@@ -25,17 +25,16 @@ export const Login_Function = async (data) => {
       console.log("admin email is registered from ", school.schoolName);
       if (school.adminPassword == data.password) {
         console.log("password match");
-        const payload = { email: data.email.split("@")[0], isAuthenticated: true }
+        const payload = { username: data.email.split("@")[0], isAuthenticated: true }
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
-        // console.log(token,"from login page");
         cookieStore.set({
-          name: 'manually-session-token',     // Name of the cookie
-          value: token,             // The JWT token itself
-          httpOnly: true,           // Crucial for security (prevents client-side JS access)
-          secure: process.env.NODE_ENV === 'development', // Use 'secure' in production
-          maxAge: 60 * 60,          // Cookie expiry (1 hour)
-          path: '/',                // Path where the cookie is valid
-          sameSite: 'strict',       // Helps prevent CSRF attacks
+          name: 'manually-session-token',
+          value: token,            
+          httpOnly: true,        
+          secure: process.env.NODE_ENV === 'production', 
+          maxAge: 60 * 60,          
+          path: '/',                
+          sameSite: 'strict',       
         });
         redirect(`/${data.email.split("@")[0]}`)
       } else {

@@ -4,12 +4,30 @@ import Link from 'next/link'
 import { DropdownMenu, Button } from '@radix-ui/themes'
 import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import { signOut , useSession } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
+import jwt from "jsonwebtoken"
+import { getCookie } from 'cookies-next';
 
 const Navbar = () => {
   const pathname = usePathname()
   const router = useRouter()
   const { data: session } = useSession()
+  const [CredentialsToken, setCredentialsToken] = React.useState(false)
+  console.log("before ", CredentialsToken);
+
+  React.useEffect(() => {
+    try {
+      const token = getCookie('manually-session-token');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (decoded || decoded !== undefined) {
+        setCredentialsToken(true)
+        console.log("after", CredentialsToken);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }, [CredentialsToken,router])
+
   return (
     <nav className='flex justify-between px-8 items-center h-18 bg-white shadow-md'>
       <div className='flex flex-col justify-center items-center gap-1'>
@@ -61,7 +79,7 @@ const Navbar = () => {
       </ul>
       <div className='flex gap-4 justify-center items-center'>
 
-        {pathname === "/login" || pathname === "/register" ? null : session ? <button onClick={() => signOut({ callbackUrl: '/login' })} className='text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-2xl rounded-base text-sm px-4 py-2.5 text-center leading-5'>Sign-out</button> : <Link className='text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-2xl rounded-base text-sm px-4 py-2.5 text-center leading-5' href="/login">Sign-in</Link> }
+        {pathname === "/login" || pathname === "/register" ? null : session || CredentialsToken ? <button onClick={() => signOut({ callbackUrl: '/login' })} className='text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-2xl rounded-base text-sm px-4 py-2.5 text-center leading-5'>Sign-out</button> : <Link className='text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-2xl rounded-base text-sm px-4 py-2.5 text-center leading-5' href="/login">Sign-in</Link>}
 
       </div>
     </nav>
