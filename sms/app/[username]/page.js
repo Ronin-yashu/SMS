@@ -2,7 +2,7 @@
 import { getServerSession } from 'next-auth';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
-import jwt, { decode } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 const page = async ({ params }) => {
   const cookieStore = await cookies()
@@ -29,7 +29,15 @@ const page = async ({ params }) => {
       console.log(error);
       return notFound();
     }
+  } else {
+    if (username !== session.user.email.split("@")[0]) {
+      notFound()
+    } else {
+      console.log("session param username",username);
+      console.log("session next auth name",session.user.email.split("@")[0]);
+    }
   }
+
   return (
     <div>
       User Page for {username}

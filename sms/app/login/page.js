@@ -4,33 +4,10 @@ import { useForm } from 'react-hook-form'
 import { Login_Function } from '@/actions/Login_Function'
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import Link from 'next/link'
-import { useSession, signIn } from "next-auth/react"
-import { useRouter } from 'next/navigation'
-import { getCookie } from 'cookies-next';
-import jwt from "jsonwebtoken"
-import { usePathname } from 'next/navigation'
+import { signIn } from "next-auth/react"
 
 const Login = () => {
-    const { data: session } = useSession()
-    const router = useRouter();
-    console.log("sessiom is : ",session);
-    const pathname = usePathname()
-
-    if (pathname=='/login') {
-        try {
-            const token = getCookie('manually-session-token');
-            console.log("token is ",token);
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            if (session) {
-                router.push(`/${session.user.email.split("@")[0]}`);
-            } else if (decoded !== undefined) {
-                router.push(`/${decoded.username}`);
-            }
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
+    
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
     return (
         <div className='w-full h-[89vh]'>
