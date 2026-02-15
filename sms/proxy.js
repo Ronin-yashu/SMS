@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import { getServerSession } from 'next-auth';
+
 export async function proxy(request) {
   const cookieStore = await cookies()
   const { pathname } = request.nextUrl;
