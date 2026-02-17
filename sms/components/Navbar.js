@@ -23,10 +23,11 @@ const Navbar = () => {
   React.useEffect(() => {
     if (isClient) {
       const token = getCookie('manually-session-token')
-      console.log("Manual token found:", token) // Debug log
+      console.log("Manual token found:", token)
       setmanualToken(token || null)
     }
-  }, [isClient, pathname])
+  }, [isClient, pathname, session]) // Add 'session' as dependency
+
 
   const handleManualSignOut = () => {
     deleteCookie('manually-session-token')

@@ -6,6 +6,7 @@ import { Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
 import SessionWrapper from "@/components/SessionWrapper";
 import { Toaster } from 'react-hot-toast'
+import StoreProvider from "@/components/StoreProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,14 +27,16 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <SessionWrapper>
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <StoreProvider>
+          <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
             <Theme >
               <Navbar />
               {children}
-              <Toaster/>
+              <Toaster />
               <Footer />
             </Theme>
-        </body>
+          </body>
+        </StoreProvider>
       </SessionWrapper>
     </html>
   );

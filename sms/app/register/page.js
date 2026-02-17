@@ -1,5 +1,7 @@
 "use client"
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { decrement, increment , amount } from '@/redux/currentStep/currentStepSlice';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,6 +9,8 @@ import { ChevronLeft, ChevronRight, Check, Building2, Mail, User, Shield, Settin
 import { Select, Blockquote, CheckboxGroup, RadioCards, Flex, Text, Button } from "@radix-ui/themes";
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import StepIndicator from '@/components/StepIndicator';
+import InputField from '@/components/InputField';
 
 // Combined schema - all fields optional to prevent re-initialization
 const formSchema = z.object({
@@ -45,13 +49,18 @@ const formSchema = z.object({
     privacyAccepted: z.boolean().optional(),
 });
 
+
 const Register = () => {
-    const [currentStep, setCurrentStep] = useState(1);
+    // const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const totalSteps = 5;
 
-    const { register, handleSubmit, control, formState: { errors, isSubmitting }, setError, clearErrors, getValues, reset } = useForm({
+    const dispatch = useDispatch();
+
+    const currentStep = useSelector((state)=>state.currentStep.value)
+
+    const { register, handleSubmit, control, formState: { errors }, setError, clearErrors, getValues, reset } = useForm({
         resolver: zodResolver(formSchema),
         mode: 'onSubmit', // Changed to onSubmit to prevent re-renders
         defaultValues: {
@@ -231,13 +240,15 @@ const Register = () => {
 
     const nextStep = () => {
         if (currentStep < totalSteps) {
-            setCurrentStep(currentStep + 1);
+            // setCurrentStep(currentStep + 1);
+            dispatch(increment());
         }
     };
 
     const prevStep = () => {
         if (currentStep > 1) {
-            setCurrentStep(currentStep - 1);
+            // setCurrentStep(currentStep - 1);
+            dispatch(decrement());
         }
     };
 
@@ -282,85 +293,35 @@ const Register = () => {
                 }
             ).then(() => {
                 setTimeout(() => {
-                    setCurrentStep(1);
+                    // setCurrentStep(1);
+                    dispatch(amount(1))
                     setFormData({});
                     reset();
                     setIsLoading(false);
                 }, 2000);
             }).catch((error) => {
                 console.error('Registration error:', error);
-                setCurrentStep(1);
+                dispatch(amount(1))
                 setIsLoading(false);
             });
         }
     };
 
-    const stepInfo = [
-        { number: 1, title: "Basic Details", icon: Building2 },
-        { number: 2, title: "Contact Info", icon: Mail },
-        { number: 3, title: "Admin Setup", icon: User },
-        { number: 4, title: "Infrastructure", icon: Settings },
-        { number: 5, title: "Plans & Terms", icon: Shield }
-    ];
-
-    const StepIndicator = () => (
-        <div className="w-full max-w-4xl mx-auto px-4 mb-12">
-            <div className="flex justify-between items-center relative">
-                <div className="absolute left-0 top-5 w-full h-1 bg-gray-200 -z-10">
-                    <div
-                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 ease-out"
-                        style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
-                    />
-                </div>
-
-                {stepInfo.map((step) => {
-                    const Icon = step.icon;
-                    return (
-                        <div key={step.number} className="flex flex-col items-center">
-                            <div className={`
-                                w-12 h-12 rounded-full flex items-center justify-center font-semibold text-sm
-                                transition-all duration-300 transform
-                                ${currentStep > step.number ? 'bg-gradient-to-br from-green-400 to-green-600 text-white scale-100 shadow-lg' :
-                                    currentStep === step.number ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white scale-110 shadow-xl animate-pulse' :
-                                        'bg-white text-gray-400 border-2 border-gray-300 scale-90'}
-                            `}>
-                                {currentStep > step.number ? <Check size={20} /> : <Icon size={20} />}
-                            </div>
-                            <p className={`
-                                mt-2 text-xs font-medium text-center hidden sm:block transition-colors duration-300
-                                ${currentStep >= step.number ? 'text-gray-700' : 'text-gray-400'}
-                            `}>
-                                {step.title}
-                            </p>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-
-    const InputField = ({ label, error, children, required = false }) => (
-        <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {label} {required && <span className="text-red-500">*</span>}
-            </label>
-            {children}
-            {error && (
-                <p className="mt-1 text-sm text-red-600 flex items-center gap-1 animate-shake">
-                    <span className="inline-block w-1 h-1 bg-red-600 rounded-full" />
-                    {error.message}
-                </p>
-            )}
-        </div>
-    );
+    //  const stepInfo = [
+    //     { number: 1, title: "Basic Details", icon: Building2 },
+    //     { number: 2, title: "Contact Info", icon: Mail },
+    //     { number: 3, title: "Admin Setup", icon: User },
+    //     { number: 4, title: "Infrastructure", icon: Settings },
+    //     { number: 5, title: "Plans & Terms", icon: Shield }
+    // ];
 
     return (
-        <div className='min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12 px-4'>
+        <div className='min-h-screen bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 py-12 px-4'>
             <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-4 shadow-lg">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-br from-blue-500 to-purple-600 rounded-full mb-4 shadow-lg">
                     <Building2 className="text-white" size={32} />
                 </div>
-                <h1 className='text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2'>
+                <h1 className='text-4xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2'>
                     Register Your School
                 </h1>
                 <p className="text-gray-600">Complete the registration process in 5 simple steps</p>
@@ -372,7 +333,7 @@ const Register = () => {
                 <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
                     <div className="h-2 bg-gray-100">
                         <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
+                            className="h-full bg-linear-to-r from-blue-500 to-purple-500 transition-all duration-500"
                             style={{ width: `${(currentStep / totalSteps) * 100}%` }}
                         />
                     </div>
@@ -928,7 +889,7 @@ const Register = () => {
                                     onClick={handleSubmit(onSubmit)}
                                     size="3"
                                     disabled={isLoading}
-                                    className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 hover:scale-105 transition-transform"
+                                    className="flex items-center gap-2 bg-linear-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 hover:scale-105 transition-transform"
                                 >
                                     Next <ChevronRight size={20} />
                                 </Button>
@@ -937,7 +898,7 @@ const Register = () => {
                                     type="submit"
                                     size="3"
                                     disabled={isLoading}
-                                    className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-transform animate-pulse"
+                                    className="flex items-center gap-2 bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-transform animate-pulse"
                                 >
                                     <Check size={20} /> Submit Registration
                                 </Button>

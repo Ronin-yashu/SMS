@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
+// import { refresh } from 'next/cache'
 // Commented console.log can be used for debugging 
 const page = async ({ params }) => {
   const cookieStore = await cookies()
@@ -21,6 +22,7 @@ const page = async ({ params }) => {
       if (decoded.username == username) {
         // console.log("verified with crenditals");
         // console.log(decoded);
+        // refresh()
       } else {
         // console.log("token and username not match");
         notFound()
@@ -35,6 +37,7 @@ const page = async ({ params }) => {
     } else {
       // console.log("session param username",username);
       // console.log("session next auth name",session.user.email.split("@")[0]);
+      // refresh()
     }
   }
 
