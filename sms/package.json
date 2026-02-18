@@ -6,9 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "lint": "eslint"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -25,6 +23,7 @@
     "multer": "^2.0.2",
     "next": "^16.1.6",
     "next-auth": "^4.24.13",
+    "otplib": "^13.3.0",
     "pg": "^8.17.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
