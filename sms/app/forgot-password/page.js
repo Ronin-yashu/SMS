@@ -11,7 +11,9 @@ import { Button } from "@radix-ui/themes";
 const formSchema = z.object({
   adminEmail: z.string().optional(),
   adminMobile: z.string().optional(),
-  otp: z.string().optional()
+  otp: z.string().optional(),
+  New_password: z.string().optional(),
+  Confirm_New_password: z.string().optional(),
 })
 
 const Page = () => {
@@ -24,6 +26,9 @@ const Page = () => {
     defaultValues: {
       adminEmail: '',
       adminMobile: '',
+      otp: '',
+      New_password: '',
+      Confirm_New_password: ''
     }
   });
 
@@ -44,9 +49,22 @@ const Page = () => {
       if (!data.otp || !/^\d{6}$/.test(data.otp)) {
         setError('otp', { message: 'Enter valid 6-digit OTP' })
       }
+    } else if (currentStep === 3) {
+      if (!data.New_password || data.New_password.length < 8) {
+        setError('New_password', { message: 'Password must be at least 8 characters' });
+        isValid = false;
+      }
+      if (!data.Confirm_New_password || data.Confirm_New_password.length < 8) {
+        setError('Confirm_New_password', { message: 'Confirm password required' });
+        isValid = false;
+      }
+      if (data.New_password !== data.Confirm_New_password) {
+        setError('Confirm_New_password', { message: "Passwords don't match" });
+        isValid = false;
+      }
     }
 
-    return isValid
+    return isValid;
   }
 
   const Otp_Verify = (data) => {
@@ -58,7 +76,7 @@ const Page = () => {
     setIsLoading(true)
     const otp_process = new Promise(async (resolve, reject) => {
       try {
-        const response = await fetch("/api/forgot_password", {
+        const response = await fetch("/api/otp_verify", {
           method: "POST",
           headers: {
             "Content-Type": 'application/json',
@@ -68,6 +86,7 @@ const Page = () => {
         const result = await response.json()
         if (response.ok) {
           resolve(result);
+          setcurrentStep(3)
         } else {
           reject(new Error(result.error || 'Verification failed'));
         }
@@ -80,6 +99,53 @@ const Page = () => {
       {
         loading: 'Verifying OTP...',
         success: 'Verification completed successfully!',
+        error: (err) => `Error: ${err.message}`,
+      }
+    ).then(() => {
+      setTimeout(() => {
+        reset();
+        setIsLoading(false);
+      }, 2000);
+    }).catch((error) => {
+      console.error('Verification error:', error);
+      setIsLoading(false);
+    });
+  }
+
+  const Change_pass = (data) => {
+    const isValid = validateStep(data);
+    if (!isValid) {
+      return;
+    }
+    console.log(data)
+    setIsLoading(true)
+    const pass_process = new Promise(async (resolve, reject) => {
+      try {
+        const response = await fetch("/api/pass_res", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          resolve(result);
+          // setcurrentStep(2)
+        } else {
+          reject(new Error(result.error || 'Process failed'));
+        }
+      } catch (error) {
+        reject(error);
+      }
+    })
+    toast.promise(
+      pass_process,
+      {
+        loading: 'Processing your details...',
+        success: 'Process completed successfully!',
         error: (err) => `Error: ${err.message}`,
       }
     ).then(() => {
@@ -189,9 +255,9 @@ const Page = () => {
         <form onSubmit={handleSubmit(Otp_Verify)} className="flex flex-col justify-center items-center gap-6 ">
           <div className="flex justify-center items-center flex-col">
             <h1 className='text-3xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent '>
-              Mobile Phone Verification
+              Admin Email Verification
             </h1>
-            <p className="text-gray-600">Enter the 6-digit verification code that was sent to your phone number.</p>
+            <p className="text-gray-600">Enter the 6-digit verification code that was sent to Admin Email.</p>
           </div>
           <div className="flex justify-center items-center gap-6">
             <InputField label="Verification Code" error={errors.otp} required>
@@ -214,7 +280,43 @@ const Page = () => {
         </form>
       )}
 
+      {currentStep === 3 && (
+        <form onSubmit={handleSubmit(Change_pass)} className="flex flex-col justify-center items-center gap-6 ">
+          <div className="flex justify-center items-center flex-col">
+            <h1 className='text-3xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent '>
+              Set New Password
+            </h1>
+            <p className="text-gray-600">use Strong password and try to include special characters and numbers.</p>
+          </div>
+          <div className="flex justify-center items-center gap-6">
+            <InputField label="Password" error={errors.adminPassword} required>
+              <input
+                type="password"
+                {...register("adminPassword")}
+                placeholder="Min. 8 characters"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+              />
+            </InputField>
 
+            <InputField label="Confirm Password" error={errors.confirmPassword} required>
+              <input
+                type="password"
+                {...register("confirmPassword")}
+                placeholder="Re-enter password"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+              />
+            </InputField>
+          </div>
+          <Button
+            type="submit"
+            size="3"
+            disabled={isLoading}
+            className="flex items-center gap-2 bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-transform animate-pulse"
+          >
+            <Check size={20} /> Continue
+          </Button>
+        </form>
+      )}
 
     </div>
   )

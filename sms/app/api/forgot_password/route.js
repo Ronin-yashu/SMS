@@ -4,6 +4,8 @@ import { generateSecret, generate, verify } from "otplib";
 import Mailjet from 'node-mailjet';
 
 export async function POST(request) {
+    const secret = generateSecret();
+    const token = await generate({ secret });
     try {
         const data = await request.json()
         console.log(data);
@@ -17,11 +19,6 @@ export async function POST(request) {
             return NextResponse.json({ error: 'No School found with the Provided Admin Credentials' }, { status: 404 })
         } else {
             const mailjet = await Mailjet.apiConnect(process.env.MAILJET_API_KEY, process.env.MAILJET_SECRET_KEY);
-            const secret = generateSecret();
-            console.log("Secret from otp package:", secret);
-            console.log("school is :", School);
-            const token = await generate({ secret });
-            console.log("Token:", token);
             const request = mailjet
                 .post('send', { version: 'v3.1' })
                 .request({
