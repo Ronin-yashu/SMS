@@ -180,6 +180,7 @@ const Page = () => {
 
         if (response.ok) {
           resolve(result);
+          console.log(result)
           setcurrentStep(2)
 
         } else {
