@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import InputField from "@/components/InputField";
 import { useForm } from 'react-hook-form';
 import { Button } from "@radix-ui/themes";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   adminEmail: z.string().optional(),
@@ -20,6 +21,7 @@ const Page = () => {
   const [currentStep, setcurrentStep] = React.useState(1)
   const [isLoading, setIsLoading] = React.useState(false);
   const [verifiedEmail, setVerifiedEmail] = React.useState('');
+  const router = useRouter();
 
   const { register, handleSubmit, formState: { errors }, setError, clearErrors, getValues } = useForm({
     resolver: zodResolver(formSchema),
@@ -160,7 +162,7 @@ const Page = () => {
         if (response.ok) {
           resolve(result);
           setTimeout(() => {
-            window.location.href = '/login';
+            router.push("/login");
           }, 2000);
         } else {
           reject(new Error(result.error || 'Password reset failed'));

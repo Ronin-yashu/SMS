@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { totp } from 'otplib';
 
 export async function POST(request) {
     try {
         const { adminEmail, otp } = await request.json();
-        
         const resetRequest = await prisma.passwordReset.findFirst({
             where: {
                 adminEmail: adminEmail,
@@ -16,14 +14,11 @@ export async function POST(request) {
         if (!resetRequest) {
             return NextResponse.json({ error: 'OTP expired or not found' }, { status: 404 });
         }
-
         if (resetRequest.attempts >= 5) {
             await prisma.passwordReset.delete({ where: { id: resetRequest.id } });
             return NextResponse.json({ error: 'Too many attempts. Request new OTP.' }, { status: 429 });
         }
-        
-        // Verify TOTP
-        const isValid = totp.check(otp, resetRequest.otpSecret);
+        const isValid = otp === resetRequest.otpSecret;
         
         if (!isValid) {
             await prisma.passwordReset.update({
@@ -35,8 +30,6 @@ export async function POST(request) {
                 attemptsLeft: 5 - (resetRequest.attempts + 1)
             }, { status: 400 });
         }
-        
-        // Mark as verified
         await prisma.passwordReset.update({
             where: { id: resetRequest.id },
             data: { attempts: -1 }

@@ -4,7 +4,7 @@ import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { redirect } from 'next/navigation';
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
-
+import bcrypt from 'bcryptjs';
 const delay = (d) => {
   return new Promise((resolve) => setTimeout(resolve, d * 1000));
 }
@@ -23,7 +23,7 @@ export const Login_Function = async (data) => {
       console.log("school is null or cannot find");
     } else {
       console.log("admin email is registered from ", school.schoolName);
-      if (school.adminPassword == data.password) {
+      if (bcrypt.compareSync(data.password, school.adminPassword)) {
         console.log("password match");
         const payload = { username: data.email.split("@")[0], isAuthenticated: true }
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
