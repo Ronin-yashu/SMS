@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticator } from 'otplib';
+import { totp } from 'otplib';
 
 export async function POST(request) {
     try {
@@ -22,8 +22,8 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Too many attempts. Request new OTP.' }, { status: 429 });
         }
         
-
-        const isValid = authenticator.check(otp, resetRequest.otpSecret);
+        // Verify TOTP
+        const isValid = totp.check(otp, resetRequest.otpSecret);
         
         if (!isValid) {
             await prisma.passwordReset.update({
@@ -35,6 +35,8 @@ export async function POST(request) {
                 attemptsLeft: 5 - (resetRequest.attempts + 1)
             }, { status: 400 });
         }
+        
+        // Mark as verified
         await prisma.passwordReset.update({
             where: { id: resetRequest.id },
             data: { attempts: -1 }

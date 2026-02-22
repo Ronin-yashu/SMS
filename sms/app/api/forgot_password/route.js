@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticator } from 'otplib';
+import { totp } from 'otplib';
 import Mailjet from 'node-mailjet';
 
 export async function POST(request) {
@@ -25,10 +25,9 @@ export async function POST(request) {
         let secret, otp;
         
         if (existingReset) {
-
             secret = existingReset.otpSecret;
-            otp = authenticator.generate(secret);
-
+            otp = totp.generate(secret);
+            
             await prisma.passwordReset.update({
                 where: { id: existingReset.id },
                 data: {
@@ -37,8 +36,8 @@ export async function POST(request) {
                 }
             });
         } else {
-            secret = authenticator.generateSecret();
-            otp = authenticator.generate(secret);
+            secret = totp.generateSecret();
+            otp = totp.generate(secret);
             
             await prisma.passwordReset.create({
                 data: {
