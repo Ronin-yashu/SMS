@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // url      = env("DATABASE_URL")
 }
 
 model School {
@@ -49,7 +48,7 @@ model School {
 
 model PasswordReset {
   id         String   @id @default(cuid())
-  adminEmail String   @unique
+  adminEmail String
   otpSecret  String?
   hashedOtp  String?
   expiresAt  DateTime

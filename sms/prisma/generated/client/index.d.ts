@@ -3794,16 +3794,16 @@ export namespace Prisma {
 
   export type PasswordResetWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    adminEmail?: string
     AND?: PasswordResetWhereInput | PasswordResetWhereInput[]
     OR?: PasswordResetWhereInput[]
     NOT?: PasswordResetWhereInput | PasswordResetWhereInput[]
+    adminEmail?: StringFilter<"PasswordReset"> | string
     otpSecret?: StringNullableFilter<"PasswordReset"> | string | null
     hashedOtp?: StringNullableFilter<"PasswordReset"> | string | null
     expiresAt?: DateTimeFilter<"PasswordReset"> | Date | string
     attempts?: IntFilter<"PasswordReset"> | number
     createdAt?: DateTimeFilter<"PasswordReset"> | Date | string
-  }, "id" | "adminEmail">
+  }, "id">
 
   export type PasswordResetOrderByWithAggregationInput = {
     id?: SortOrder
