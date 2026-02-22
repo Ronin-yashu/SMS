@@ -19,10 +19,11 @@ const formSchema = z.object({
 const Page = () => {
   const [currentStep, setcurrentStep] = React.useState(1)
   const [isLoading, setIsLoading] = React.useState(false);
+  const [verifiedEmail, setVerifiedEmail] = React.useState('');
 
-  const { register, handleSubmit, control, formState: { errors }, setError, clearErrors, getValues, reset } = useForm({
+  const { register, handleSubmit, formState: { errors }, setError, clearErrors, getValues } = useForm({
     resolver: zodResolver(formSchema),
-    mode: 'onSubmit', // Changed to onSubmit to prevent re-renders
+    mode: 'onSubmit',
     defaultValues: {
       adminEmail: '',
       adminMobile: '',
@@ -48,6 +49,7 @@ const Page = () => {
     } else if (currentStep === 2) {
       if (!data.otp || !/^\d{6}$/.test(data.otp)) {
         setError('otp', { message: 'Enter valid 6-digit OTP' })
+        isValid = false;
       }
     } else if (currentStep === 3) {
       if (!data.New_password || data.New_password.length < 8) {
@@ -67,158 +69,125 @@ const Page = () => {
     return isValid;
   }
 
-  const Otp_Verify = (data) => {
-    const isValid = validateStep(data)
-    if (!isValid) {
-      return
-    }
-    console.log(data)
-    setIsLoading(true)
-    const otp_process = new Promise(async (resolve, reject) => {
-      try {
-        const response = await fetch("/api/otp_verify", {
-          method: "POST",
-          headers: {
-            "Content-Type": 'application/json',
-          },
-          body: JSON.stringify(data),
-        })
-        const result = await response.json()
-        if (response.ok) {
-          resolve(result);
-          setcurrentStep(3)
-        } else {
-          reject(new Error(result.error || 'Verification failed'));
-        }
-      } catch (error) {
-        reject(error);
-      }
-    })
-    toast.promise(
-      otp_process,
-      {
-        loading: 'Verifying OTP...',
-        success: 'Verification completed successfully!',
-        error: (err) => `Error: ${err.message}`,
-      }
-    ).then(() => {
-      setTimeout(() => {
-        reset();
-        setIsLoading(false);
-      }, 2000);
-    }).catch((error) => {
-      console.error('Verification error:', error);
-      setIsLoading(false);
-    });
-  }
-
-  const Change_pass = (data) => {
-    const isValid = validateStep(data);
-    if (!isValid) {
-      return;
-    }
-    console.log(data)
-    setIsLoading(true)
-    const pass_process = new Promise(async (resolve, reject) => {
-      try {
-        const response = await fetch("/api/pass_res", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-          resolve(result);
-          // setcurrentStep(2)
-        } else {
-          reject(new Error(result.error || 'Process failed'));
-        }
-      } catch (error) {
-        reject(error);
-      }
-    })
-    toast.promise(
-      pass_process,
-      {
-        loading: 'Processing your details...',
-        success: 'Process completed successfully!',
-        error: (err) => `Error: ${err.message}`,
-      }
-    ).then(() => {
-      setTimeout(() => {
-        reset();
-        setIsLoading(false);
-      }, 2000);
-    }).catch((error) => {
-      console.error('Verification error:', error);
-      setIsLoading(false);
-    });
-  }
-
   const onSubmit = (data) => {
     const isValid = validateStep(data);
-    if (!isValid) {
-      return;
-    }
-    console.log(data)
-    setIsLoading(true)
+    if (!isValid) return;
+
+    setIsLoading(true);
     const forgot_process = new Promise(async (resolve, reject) => {
       try {
         const response = await fetch("/api/forgot_password", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
         });
 
         const result = await response.json();
 
         if (response.ok) {
+          setVerifiedEmail(data.adminEmail);
           resolve(result);
-          console.log(result)
-          setcurrentStep(2)
-
+          setcurrentStep(2);
         } else {
           reject(new Error(result.error || 'Verification failed'));
         }
       } catch (error) {
         reject(error);
       }
-    })
-    toast.promise(
-      forgot_process,
-      {
-        loading: 'Verifying your details...',
-        success: 'Verification completed successfully!',
-        error: (err) => `Error: ${err.message}`,
-      }
-    ).then(() => {
-      setTimeout(() => {
-        reset();
-        setIsLoading(false);
-      }, 2000);
-    }).catch((error) => {
-      console.error('Verification error:', error);
-      setIsLoading(false);
     });
+
+    toast.promise(forgot_process, {
+      loading: 'Verifying your details...',
+      success: 'OTP sent successfully!',
+      error: (err) => `Error: ${err.message}`,
+    }).finally(() => setIsLoading(false));
+  }
+
+  const Otp_Verify = (data) => {
+    const isValid = validateStep(data);
+    if (!isValid) return;
+
+    setIsLoading(true);
+    const otp_process = new Promise(async (resolve, reject) => {
+      try {
+        const response = await fetch("/api/otp_verify", {
+          method: "POST",
+          headers: { "Content-Type": 'application/json' },
+          body: JSON.stringify({
+            adminEmail: verifiedEmail,
+            otp: data.otp
+          }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          resolve(result);
+          setcurrentStep(3);
+        } else {
+          reject(new Error(result.error || 'Verification failed'));
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+
+    toast.promise(otp_process, {
+      loading: 'Verifying OTP...',
+      success: 'OTP verified successfully!',
+      error: (err) => `Error: ${err.message}`,
+    }).finally(() => setIsLoading(false));
+  }
+
+  const Change_pass = (data) => {
+    const isValid = validateStep(data);
+    if (!isValid) return;
+
+    setIsLoading(true);
+    const pass_process = new Promise(async (resolve, reject) => {
+      try {
+        const response = await fetch("/api/pass_res", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            adminEmail: verifiedEmail,
+            newPassword: data.New_password
+          }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          resolve(result);
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+        } else {
+          reject(new Error(result.error || 'Password reset failed'));
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+
+    toast.promise(pass_process, {
+      loading: 'Resetting password...',
+      success: 'Password changed successfully! Redirecting...',
+      error: (err) => `Error: ${err.message}`,
+    }).finally(() => setIsLoading(false));
   }
 
   return (
-    <div className=" min-h-screen bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 gap-8 flex flex-col justify-center items-center ">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 gap-8 flex flex-col justify-center items-center">
 
-      <div className="bg-linear-to-br w-22 h-22 from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg ">
+      <div className="bg-linear-to-br w-22 h-22 from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
         <KeyRound className="text-white" size={40} />
       </div>
 
       {currentStep === 1 && (
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col justify-center items-center gap-6 ">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col justify-center items-center gap-6">
           <div className="flex justify-center items-center flex-col">
-            <h1 className='text-3xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent '>
+            <h1 className='text-3xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'>
               Reset your password
             </h1>
             <p className="text-gray-600">Reset your passwords in a few simple steps</p>
@@ -245,7 +214,7 @@ const Page = () => {
             type="submit"
             size="3"
             disabled={isLoading}
-            className="flex items-center gap-2 bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-transform animate-pulse"
+            className="flex items-center gap-2 bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-transform"
           >
             <Check size={20} /> Verify
           </Button>
@@ -253,12 +222,12 @@ const Page = () => {
       )}
 
       {currentStep === 2 && (
-        <form onSubmit={handleSubmit(Otp_Verify)} className="flex flex-col justify-center items-center gap-6 ">
+        <form onSubmit={handleSubmit(Otp_Verify)} className="flex flex-col justify-center items-center gap-6">
           <div className="flex justify-center items-center flex-col">
-            <h1 className='text-3xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent '>
+            <h1 className='text-3xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'>
               Admin Email Verification
             </h1>
-            <p className="text-gray-600">Enter the 6-digit verification code that was sent to Admin Email.</p>
+            <p className="text-gray-600">Enter the 6-digit verification code sent to {verifiedEmail}</p>
           </div>
           <div className="flex justify-center items-center gap-6">
             <InputField label="Verification Code" error={errors.otp} required>
@@ -266,6 +235,7 @@ const Page = () => {
                 type="text"
                 {...register("otp")}
                 placeholder="Enter 6-digit code"
+                maxLength={6}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
               />
             </InputField>
@@ -274,7 +244,7 @@ const Page = () => {
             type="submit"
             size="3"
             disabled={isLoading}
-            className="flex items-center gap-2 bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-transform animate-pulse"
+            className="flex items-center gap-2 bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-transform"
           >
             <Check size={20} /> Verify
           </Button>
@@ -282,27 +252,27 @@ const Page = () => {
       )}
 
       {currentStep === 3 && (
-        <form onSubmit={handleSubmit(Change_pass)} className="flex flex-col justify-center items-center gap-6 ">
+        <form onSubmit={handleSubmit(Change_pass)} className="flex flex-col justify-center items-center gap-6">
           <div className="flex justify-center items-center flex-col">
-            <h1 className='text-3xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent '>
+            <h1 className='text-3xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'>
               Set New Password
             </h1>
-            <p className="text-gray-600">use Strong password and try to include special characters and numbers.</p>
+            <p className="text-gray-600">Use strong password with special characters and numbers</p>
           </div>
           <div className="flex justify-center items-center gap-6">
-            <InputField label="Password" error={errors.adminPassword} required>
+            <InputField label="New Password" error={errors.New_password} required>
               <input
                 type="password"
-                {...register("adminPassword")}
+                {...register("New_password")}
                 placeholder="Min. 8 characters"
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
               />
             </InputField>
 
-            <InputField label="Confirm Password" error={errors.confirmPassword} required>
+            <InputField label="Confirm Password" error={errors.Confirm_New_password} required>
               <input
                 type="password"
-                {...register("confirmPassword")}
+                {...register("Confirm_New_password")}
                 placeholder="Re-enter password"
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
               />
@@ -312,9 +282,9 @@ const Page = () => {
             type="submit"
             size="3"
             disabled={isLoading}
-            className="flex items-center gap-2 bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-transform animate-pulse"
+            className="flex items-center gap-2 bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:scale-105 transition-transform"
           >
-            <Check size={20} /> Continue
+            <Check size={20} /> Reset Password
           </Button>
         </form>
       )}
