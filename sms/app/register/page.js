@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { decrement, increment , amount } from '@/redux/currentStep/currentStepSlice';
+import { decrement, increment, amount } from '@/redux/currentStep/currentStepSlice';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,6 +11,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import StepIndicator from '@/components/StepIndicator';
 import InputField from '@/components/InputField';
+import { useRouter } from 'next/navigation';
 
 // Combined schema - all fields optional to prevent re-initialization
 const formSchema = z.object({
@@ -51,18 +52,18 @@ const formSchema = z.object({
 
 
 const Register = () => {
-    // const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const totalSteps = 5;
+    const router = useRouter();
 
     const dispatch = useDispatch();
 
-    const currentStep = useSelector((state)=>state.currentStep.value)
+    const currentStep = useSelector((state) => state.currentStep.value)
 
     const { register, handleSubmit, control, formState: { errors }, setError, clearErrors, getValues, reset } = useForm({
         resolver: zodResolver(formSchema),
-        mode: 'onSubmit', // Changed to onSubmit to prevent re-renders
+        mode: 'onSubmit',
         defaultValues: {
             schoolName: '',
             schoolType: 'pre-primary',
@@ -240,14 +241,12 @@ const Register = () => {
 
     const nextStep = () => {
         if (currentStep < totalSteps) {
-            // setCurrentStep(currentStep + 1);
             dispatch(increment());
         }
     };
 
     const prevStep = () => {
         if (currentStep > 1) {
-            // setCurrentStep(currentStep - 1);
             dispatch(decrement());
         }
     };
@@ -293,11 +292,11 @@ const Register = () => {
                 }
             ).then(() => {
                 setTimeout(() => {
-                    // setCurrentStep(1);
                     dispatch(amount(1))
                     setFormData({});
                     reset();
                     setIsLoading(false);
+                    router.push("/login");
                 }, 2000);
             }).catch((error) => {
                 console.error('Registration error:', error);
@@ -307,13 +306,6 @@ const Register = () => {
         }
     };
 
-    //  const stepInfo = [
-    //     { number: 1, title: "Basic Details", icon: Building2 },
-    //     { number: 2, title: "Contact Info", icon: Mail },
-    //     { number: 3, title: "Admin Setup", icon: User },
-    //     { number: 4, title: "Infrastructure", icon: Settings },
-    //     { number: 5, title: "Plans & Terms", icon: Shield }
-    // ];
 
     return (
         <div className='min-h-screen bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 py-12 px-4'>
