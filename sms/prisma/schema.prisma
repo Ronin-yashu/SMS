@@ -11,7 +11,7 @@ model School {
   id                  String   @id @default(cuid())
   schoolName          String
   schoolType          String
-  boardAffiliation String
+  boardAffiliation    String
   establishmentYear   String
   schoolCode          String   @unique
   udiseCode           String?
@@ -44,6 +44,14 @@ model School {
   privacyAccepted     Boolean
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+
+  students            Student[]
+  parents             Parent[]
+  feeStructures       FeeStructure[]
+  routes              Route[]
+
+  @@index([schoolCode])
+  @@index([adminEmail])
 }
 
 model PasswordReset {
@@ -59,3 +67,243 @@ model PasswordReset {
   @@index([expiresAt])
 }
 
+model Student {
+  id                    String    @id @default(cuid())
+  studentId             String    @unique
+  admissionNumber       String    @unique
+  qrCodeValue           String    @unique
+  firstName             String
+  middleName            String?
+  lastName              String
+  dateOfBirth           DateTime
+  gender                String
+  bloodGroup            String?
+  aadharNumber          String?
+  photoUrl              String?
+  parentPrimaryMobile   String
+  parentAlternateMobile String?
+  parentEmail           String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  addressLine1          String
+  addressLine2          String?
+  city                  String
+  state                 String
+  pinCode               String
+  country               String    @default("India")
+  admissionDate         DateTime
+  previousSchoolId      String?
+  usesTransport         Boolean   @default(false)
+  transportRouteId      String?
+  pickupPoint           String?
+  dropPoint             String?
+  status                String    @default("Active")
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  schoolId              String
+  parentId              String
+
+  school                School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  parent                Parent    @relation(fields: [parentId], references: [id], onDelete: Restrict)
+  route                 Route?    @relation(fields: [transportRouteId], references: [id], onDelete: SetNull)
+  academicHistory       StudentAcademicHistory[]
+  documents             Document[]
+  studentFees           StudentFee[]
+  feePayments           FeePayment[]
+
+  @@index([schoolId, status])
+  @@index([admissionNumber])
+  @@index([qrCodeValue])
+  @@index([aadharNumber])
+  @@index([parentId])
+}
+
+model StudentAcademicHistory {
+  id                String    @id @default(cuid())
+  academicYear      String
+  class             String
+  section           String
+  rollNumber        Int
+  classTeacher      String?
+  promotionStatus   String    @default("NA")
+  attendancePresent Int       @default(0)
+  attendanceAbsent  Int       @default(0)
+  finalGrade        String?
+  remarks           String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  studentId         String
+
+  student           Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, academicYear])
+  @@index([studentId, academicYear])
+  @@index([academicYear, class, section])
+}
+
+model Parent {
+  id                String    @id @default(cuid())
+  fatherName        String
+  fatherOccupation  String?
+  fatherMobile      String
+  fatherEmail       String?
+  fatherAadhar      String?
+  motherName        String
+  motherOccupation  String?
+  motherMobile      String
+  motherEmail       String?
+  motherAadhar      String?
+  guardianName      String?
+  guardianRelation  String?
+  guardianMobile    String?
+  guardianEmail     String?
+  primaryContact    String    @default("Father")
+  addressLine1      String
+  addressLine2      String?
+  city              String
+  state             String
+  pinCode           String
+  country           String    @default("India")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  schoolId          String
+
+  school            School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  students          Student[]
+
+  @@index([fatherMobile])
+  @@index([motherMobile])
+  @@index([guardianMobile])
+  @@index([fatherEmail])
+  @@index([schoolId])
+}
+
+model Document {
+  id                 String    @id @default(cuid())
+  documentType       String
+  documentUrl        String
+  fileName           String
+  fileSize           Int
+  mimeType           String
+  verificationStatus String    @default("Pending")
+  verifiedBy         String?
+  verifiedAt         DateTime?
+  rejectionReason    String?
+  uploadedAt         DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  studentId          String
+
+  student            Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, documentType])
+  @@index([verificationStatus])
+}
+
+model FeeStructure {
+  id                  String    @id @default(cuid())
+  class               String
+  academicYear        String
+  tuitionFeeMonthly   Int
+  transportFeeMonthly Int       @default(0)
+  examFeeYearly       Int       @default(0)
+  admissionFee        Int       @default(0)
+  booksFee            Int       @default(0)
+  idCardFee           Int       @default(0)
+  activityFee         Int       @default(0)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  schoolId            String
+
+  school              School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, class, academicYear])
+  @@index([schoolId, academicYear])
+}
+
+model StudentFee {
+  id                 String    @id @default(cuid())
+  academicYear       String
+  tuitionFee         Int
+  transportFee       Int       @default(0)
+  examFee            Int       @default(0)
+  admissionFee       Int       @default(0)
+  otherFees          Int       @default(0)
+  discountPercentage Int       @default(0)
+  discountAmount     Int       @default(0)
+  specialCharges     Int       @default(0)
+  totalFee           Int
+  totalPayable       Int
+  totalPaid          Int       @default(0)
+  totalPending       Int
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  studentId          String
+
+  student            Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  installments       FeeInstallment[]
+
+  @@unique([studentId, academicYear])
+  @@index([studentId, academicYear])
+}
+
+model FeeInstallment {
+  id                String    @id @default(cuid())
+  installmentNumber Int
+  month             String
+  dueDate           DateTime
+  amountDue         Int
+  amountPaid        Int       @default(0)
+  lateFee           Int       @default(0)
+  status            String    @default("Pending")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  studentFeeId      String
+
+  studentFee        StudentFee @relation(fields: [studentFeeId], references: [id], onDelete: Cascade)
+  payments          FeePayment[]
+
+  @@index([studentFeeId])
+  @@index([dueDate, status])
+  @@index([status])
+}
+
+model FeePayment {
+  id             String    @id @default(cuid())
+  amountPaid     Int
+  paymentDate    DateTime  @default(now())
+  paymentMethod  String
+  transactionId  String?
+  receiptNumber  String    @unique
+  paymentFor     String
+  remarks        String?
+  paidBy         String?
+  createdAt      DateTime  @default(now())
+  studentId      String
+  installmentId  String?
+
+  student        Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  installment    FeeInstallment? @relation(fields: [installmentId], references: [id], onDelete: SetNull)
+
+  @@index([studentId])
+  @@index([receiptNumber])
+  @@index([paymentDate])
+}
+
+model Route {
+  id             String    @id @default(cuid())
+  routeName      String
+  stops          String[]
+  vehicleNumber  String
+  driverName     String
+  driverMobile   String
+  capacity       Int       @default(40)
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  schoolId       String
+
+  school         School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  students       Student[]
+
+  @@index([schoolId, isActive])
+}

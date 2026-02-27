@@ -169,6 +169,183 @@ exports.Prisma.PasswordResetScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.StudentScalarFieldEnum = {
+  id: 'id',
+  studentId: 'studentId',
+  admissionNumber: 'admissionNumber',
+  qrCodeValue: 'qrCodeValue',
+  firstName: 'firstName',
+  middleName: 'middleName',
+  lastName: 'lastName',
+  dateOfBirth: 'dateOfBirth',
+  gender: 'gender',
+  bloodGroup: 'bloodGroup',
+  aadharNumber: 'aadharNumber',
+  photoUrl: 'photoUrl',
+  parentPrimaryMobile: 'parentPrimaryMobile',
+  parentAlternateMobile: 'parentAlternateMobile',
+  parentEmail: 'parentEmail',
+  emergencyContactName: 'emergencyContactName',
+  emergencyContactPhone: 'emergencyContactPhone',
+  addressLine1: 'addressLine1',
+  addressLine2: 'addressLine2',
+  city: 'city',
+  state: 'state',
+  pinCode: 'pinCode',
+  country: 'country',
+  admissionDate: 'admissionDate',
+  previousSchoolId: 'previousSchoolId',
+  usesTransport: 'usesTransport',
+  transportRouteId: 'transportRouteId',
+  pickupPoint: 'pickupPoint',
+  dropPoint: 'dropPoint',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  schoolId: 'schoolId',
+  parentId: 'parentId'
+};
+
+exports.Prisma.StudentAcademicHistoryScalarFieldEnum = {
+  id: 'id',
+  academicYear: 'academicYear',
+  class: 'class',
+  section: 'section',
+  rollNumber: 'rollNumber',
+  classTeacher: 'classTeacher',
+  promotionStatus: 'promotionStatus',
+  attendancePresent: 'attendancePresent',
+  attendanceAbsent: 'attendanceAbsent',
+  finalGrade: 'finalGrade',
+  remarks: 'remarks',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  studentId: 'studentId'
+};
+
+exports.Prisma.ParentScalarFieldEnum = {
+  id: 'id',
+  fatherName: 'fatherName',
+  fatherOccupation: 'fatherOccupation',
+  fatherMobile: 'fatherMobile',
+  fatherEmail: 'fatherEmail',
+  fatherAadhar: 'fatherAadhar',
+  motherName: 'motherName',
+  motherOccupation: 'motherOccupation',
+  motherMobile: 'motherMobile',
+  motherEmail: 'motherEmail',
+  motherAadhar: 'motherAadhar',
+  guardianName: 'guardianName',
+  guardianRelation: 'guardianRelation',
+  guardianMobile: 'guardianMobile',
+  guardianEmail: 'guardianEmail',
+  primaryContact: 'primaryContact',
+  addressLine1: 'addressLine1',
+  addressLine2: 'addressLine2',
+  city: 'city',
+  state: 'state',
+  pinCode: 'pinCode',
+  country: 'country',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  schoolId: 'schoolId'
+};
+
+exports.Prisma.DocumentScalarFieldEnum = {
+  id: 'id',
+  documentType: 'documentType',
+  documentUrl: 'documentUrl',
+  fileName: 'fileName',
+  fileSize: 'fileSize',
+  mimeType: 'mimeType',
+  verificationStatus: 'verificationStatus',
+  verifiedBy: 'verifiedBy',
+  verifiedAt: 'verifiedAt',
+  rejectionReason: 'rejectionReason',
+  uploadedAt: 'uploadedAt',
+  updatedAt: 'updatedAt',
+  studentId: 'studentId'
+};
+
+exports.Prisma.FeeStructureScalarFieldEnum = {
+  id: 'id',
+  class: 'class',
+  academicYear: 'academicYear',
+  tuitionFeeMonthly: 'tuitionFeeMonthly',
+  transportFeeMonthly: 'transportFeeMonthly',
+  examFeeYearly: 'examFeeYearly',
+  admissionFee: 'admissionFee',
+  booksFee: 'booksFee',
+  idCardFee: 'idCardFee',
+  activityFee: 'activityFee',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  schoolId: 'schoolId'
+};
+
+exports.Prisma.StudentFeeScalarFieldEnum = {
+  id: 'id',
+  academicYear: 'academicYear',
+  tuitionFee: 'tuitionFee',
+  transportFee: 'transportFee',
+  examFee: 'examFee',
+  admissionFee: 'admissionFee',
+  otherFees: 'otherFees',
+  discountPercentage: 'discountPercentage',
+  discountAmount: 'discountAmount',
+  specialCharges: 'specialCharges',
+  totalFee: 'totalFee',
+  totalPayable: 'totalPayable',
+  totalPaid: 'totalPaid',
+  totalPending: 'totalPending',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  studentId: 'studentId'
+};
+
+exports.Prisma.FeeInstallmentScalarFieldEnum = {
+  id: 'id',
+  installmentNumber: 'installmentNumber',
+  month: 'month',
+  dueDate: 'dueDate',
+  amountDue: 'amountDue',
+  amountPaid: 'amountPaid',
+  lateFee: 'lateFee',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  studentFeeId: 'studentFeeId'
+};
+
+exports.Prisma.FeePaymentScalarFieldEnum = {
+  id: 'id',
+  amountPaid: 'amountPaid',
+  paymentDate: 'paymentDate',
+  paymentMethod: 'paymentMethod',
+  transactionId: 'transactionId',
+  receiptNumber: 'receiptNumber',
+  paymentFor: 'paymentFor',
+  remarks: 'remarks',
+  paidBy: 'paidBy',
+  createdAt: 'createdAt',
+  studentId: 'studentId',
+  installmentId: 'installmentId'
+};
+
+exports.Prisma.RouteScalarFieldEnum = {
+  id: 'id',
+  routeName: 'routeName',
+  stops: 'stops',
+  vehicleNumber: 'vehicleNumber',
+  driverName: 'driverName',
+  driverMobile: 'driverMobile',
+  capacity: 'capacity',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  schoolId: 'schoolId'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -187,7 +364,16 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   School: 'School',
-  PasswordReset: 'PasswordReset'
+  PasswordReset: 'PasswordReset',
+  Student: 'Student',
+  StudentAcademicHistory: 'StudentAcademicHistory',
+  Parent: 'Parent',
+  Document: 'Document',
+  FeeStructure: 'FeeStructure',
+  StudentFee: 'StudentFee',
+  FeeInstallment: 'FeeInstallment',
+  FeePayment: 'FeePayment',
+  Route: 'Route'
 };
 
 /**
