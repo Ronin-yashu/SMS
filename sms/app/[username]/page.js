@@ -3,33 +3,50 @@ import { getServerSession } from 'next-auth';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import { prisma } from '@/lib/prisma';
 import DashboardHeader from '@/components/DashboardHeader';
 import StatsCards from '@/components/StatsCards';
 import QuickActions from '@/components/QuickActions';
 import RecentActivity from '@/components/RecentActivity';
-// import { refresh } from 'next/cache'
-// Commented console.log can be used for debugging 
+
+async function getDashboardData(username) {
+  try {
+    const school = await prisma.school.findFirst({
+      where: {
+        adminEmail: {
+          contains: `${username}@`
+        }
+      }
+    });
+
+    if (!school) return null;
+    const stats = {
+      totalStudents: school.studentStrength,
+      teachingStaff: school.teachingStaff,
+      nonTeachingStaff: school.nonTeachingStaff,
+      totalClasses: school.totalClasses,
+      attendanceToday: '92%',
+    };
+
+    return { school, stats };
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    return null;
+  }
+}
+
 const page = async ({ params }) => {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('manually-session-token')
-  // console.log("type of Token is ", typeof (token));
+  const cookieStore = await cookies();
+  const token = cookieStore.get('manually-session-token');
 
   const { username } = await params;
-  // console.log(await params);
+  
   const session = await getServerSession();
   if (!session) {
-    // console.log("No session found from next-auth, unauthorized access to user page.");
-    // console.log("username from params is ", username);
     try {
       const decoded = jwt.verify(token.value, process.env.JWT_SECRET);
-      // console.log("username from decode is", decoded.username);
-      if (decoded.username == username) {
-        // console.log("verified with crenditals");
-        // console.log(decoded);
-        // refresh()
-      } else {
-        // console.log("token and username not match");
-        notFound()
+      if (decoded.username !== username) {
+        notFound();
       }
     } catch (error) {
       console.log(error);
@@ -37,31 +54,37 @@ const page = async ({ params }) => {
     }
   } else {
     if (username !== session.user.email.split("@")[0]) {
-      notFound()
-    } else {
-      // console.log("session param username",username);
-      // console.log("session next auth name",session.user.email.split("@")[0]);
-      // refresh()
+      notFound();
     }
   }
 
+  const data = await getDashboardData(username);
+  
+  if (!data) {
+    return (
+      <div className="p-6">
+        <p className="text-red-500">Unable to load dashboard data. Please contact support.</p>
+      </div>
+    );
+  }
+
+  const { school, stats } = data;
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 w-full">
       <DashboardHeader
         title="Dashboard"
         subtitle={`Welcome back! Here's what's happening at ${school.schoolName}`}
       />
 
-      {/* Stats with real data */}
       <StatsCards stats={stats} />
 
-      {/* Quick Actions + Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <QuickActions username={username} />
         <RecentActivity />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default page
+export default page;

@@ -4,37 +4,33 @@ export default function StatsCards({ stats }) {
   const cards = [
     {
       label: 'Total Students',
-      value: stats.totalStudents || '0',
+      value: stats?.totalStudents || '0',
       change: '+12 this month',
       icon: Users,
-      color: 'from-blue-500 to-blue-600',
       bg: 'bg-blue-50',
       text: 'text-blue-600'
     },
     {
       label: 'Teaching Staff',
-      value: stats.teachingStaff || '0',
+      value: stats?.teachingStaff || '0',
       change: '+2 this month',
       icon: UserCheck,
-      color: 'from-purple-500 to-purple-600',
       bg: 'bg-purple-50',
       text: 'text-purple-600'
     },
     {
       label: 'Total Classes',
-      value: stats.totalClasses || '0',
+      value: stats?.totalClasses || '0',
       change: '3 sections each',
       icon: BookOpen,
-      color: 'from-emerald-500 to-emerald-600',
       bg: 'bg-emerald-50',
       text: 'text-emerald-600'
     },
     {
       label: "Today's Attendance",
-      value: stats.attendanceToday || 'N/A',
+      value: stats?.attendanceToday || 'N/A',
       change: '+3% vs yesterday',
       icon: TrendingUp,
-      color: 'from-orange-500 to-orange-600',
       bg: 'bg-orange-50',
       text: 'text-orange-600'
     },
