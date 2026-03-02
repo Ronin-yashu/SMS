@@ -5,7 +5,7 @@ export default async function SchoolLayout({ children, params }) {
     return (
         <div className="flex h-[88vh]">
             <Sidebar username={username} />
-            <main className="overflow-auto">
+            <main className="overflow-auto w-full">
                 {children}
             </main>
         </div>
