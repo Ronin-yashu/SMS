@@ -1,6 +1,6 @@
 "use client"
 import React from 'react'
-import { Button, Dialog, Flex, Text, TextField } from '@radix-ui/themes'
+import { Button, Dialog, Flex } from '@radix-ui/themes'
 import { Zap, Plus, FileAxis3d } from 'lucide-react'
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -9,20 +9,25 @@ import toast from 'react-hot-toast';
 import InputField from '@/components/InputField';
 
 const QuickSetupSchema = z.object({
-    baseMonthlyFee: z.int().optional(),
-    transportMonthlyFee: z.int().optional(),
-    examYearlyFee: z.int().optional(),
-    admissionOneTimeFee: z.int().optional(),
-    bookFee: z.int().optional(),
-    idCardFee: z.int().optional(),
-    activityFee: z.int().optional(),
-})
-
+    baseMonthlyFee: z.number({ invalid_type_error: 'Base monthly fee is required' }).int().positive({ message: 'Must be a positive number' }),
+    transportMonthlyFee: z.number({ invalid_type_error: 'Transport fee is required' }).int().positive({ message: 'Must be a positive number' }),
+    examYearlyFee: z.number({ invalid_type_error: 'Exam yearly fee is required' }).int().positive({ message: 'Must be a positive number' }),
+    admissionOneTimeFee: z.number({ invalid_type_error: 'Admission fee is required' }).int().positive({ message: 'Must be a positive number' }),
+    bookFee: z.number({ invalid_type_error: 'Book fee is required' }).int().positive({ message: 'Must be a positive number' }),
+    idCardFee: z.number({ invalid_type_error: 'ID card fee is required' }).int().positive({ message: 'Must be a positive number' }),
+    activityFee: z.number({ invalid_type_error: 'Activity fee is required' }).int().positive({ message: 'Must be a positive number' }),
+});
 
 const EmptyFeeButton = () => {
     const [isLoading, setIsLoading] = React.useState(false);
+    const [open, setOpen] = React.useState(false);
 
-    const { register, handleSubmit, control, formState: { errors }, setError, clearErrors, getValues, reset } = useForm({
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset,
+    } = useForm({
         resolver: zodResolver(QuickSetupSchema),
         mode: 'onSubmit',
         defaultValues: {
@@ -36,92 +41,46 @@ const EmptyFeeButton = () => {
         }
     });
 
-    const validateData = (data) => {
-        clearErrors();
-        let isValid = true;
-
-        if (!data.baseMonthlyFee || data.baseMonthlyFee < 0) {
-            setError('baseMonthlyFee', { message: 'Base monthly fee must be a positive number' });
-            isValid = false;
-        }
-        if (!data.transportMonthlyFee || data.transportMonthlyFee < 0) {
-            setError('transportMonthlyFee', { message: 'Transport monthly fee must be a positive number' });
-            isValid = false;
-        }
-        if (!data.examYearlyFee || data.examYearlyFee < 0) {
-            setError('examYearlyFee', { message: 'Exam yearly fee must be a positive number' });
-            isValid = false;
-        }
-        if (!data.admissionOneTimeFee || data.admissionOneTimeFee < 0) {
-            setError('admissionOneTimeFee', { message: 'Admission one-time fee must be a positive number' });
-            isValid = false;
-        }
-        if (!data.bookFee || data.bookFee < 0) {
-            setError('bookFee', { message: 'Book fee must be a positive number' });
-            isValid = false;
-        }
-        if (!data.idCardFee || data.idCardFee < 0) {
-            setError('idCardFee', { message: 'ID card fee must be a positive number' });
-            isValid = false;
-        }
-        if (!data.activityFee || data.activityFee < 0) {
-            setError('activityFee', { message: 'Activity fee must be a positive number' });
-            isValid = false;
-        }
-        return isValid;
+    const handleClose = () => {
+        reset();
+        setOpen(false);
     };
 
     const onSubmit = async (data) => {
-        const isValid = validateData(data);
-        if (!isValid) {
-            return;
-        } else {
-            setIsLoading(true);
-            const Quick_setup_Promise = new Promise(async (resolve, reject) => {
-                try {
-                    const response = await fetch("/api/fee_structure/QuickSetup", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify(data),
-                    });
+        setIsLoading(true);
 
-                    const result = await response.json();
+        const promise = fetch("/api/fee_structure/QuickSetup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        }).then(async (res) => {
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.error || 'Quick setup failed');
+            return result;
+        });
 
-                    if (response.ok) {
-                        resolve(result);
-                    } else {
-                        reject(new Error(result.error || 'Quick setup failed'));
-                    }
-                } catch (error) {
-                    reject(error);
-                }
-            });
-            toast.promise(
-                Quick_setup_Promise,
-                {
-                    loading: 'Submitting your data...',
-                    success: 'Quick setup completed successfully!',
-                    error: (err) => `Error: ${err.message}`,
-                }
-            ).then(() => {
-                setTimeout(() => {
-                    reset();
-                    setIsLoading(false);
-                }, 2000);
-            }).catch((error) => {
-                console.error('Quick setup error:', error);
-                setIsLoading(false);
-            });
-        }
+        toast.promise(promise, {
+            loading: 'Setting up fee structure...',
+            success: 'Quick setup completed successfully!',
+            error: (err) => `Error: ${err.message}`,
+        }).then(() => {
+            handleClose();
+        }).catch(() => {
+            // keep dialog open so user can fix
+        }).finally(() => {
+            setIsLoading(false);
+        });
     };
 
     return (
         <div className='flex items-center justify-center gap-6 mt-8'>
-            <Dialog.Root>
+
+            <Dialog.Root open={open} onOpenChange={(val) => {
+                if (!val) handleClose();
+                else setOpen(true);
+            }}>
                 <Dialog.Trigger>
-                    <Button>
+                    <Button onClick={() => setOpen(true)}>
                         <Zap size={18} className='mr-2' />
                         Quick Setup
                     </Button>
@@ -130,13 +89,14 @@ const EmptyFeeButton = () => {
                 <Dialog.Content size="4">
                     <Dialog.Title>Quick Setup</Dialog.Title>
                     <Dialog.Description size="2" mb="4">
-                        Set base monthly fee for all classes and add transport fee. You can edit fee structure for each class later.
+                        Set base monthly fee for all classes and add transport fee.
+                        You can edit the fee structure for each class later.
                     </Dialog.Description>
 
                     <Flex direction="column" gap="3">
 
                         <div className='flex justify-center items-center gap-6'>
-                            <InputField label="Monthly Fee" error={errors.baseMonthlyFee}>
+                            <InputField label="Monthly Fee" error={errors.baseMonthlyFee} required>
                                 <input
                                     type="number"
                                     {...register("baseMonthlyFee", { valueAsNumber: true })}
@@ -144,7 +104,8 @@ const EmptyFeeButton = () => {
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                                 />
                             </InputField>
-                            <InputField label="Transport Monthly Fee" error={errors.transportMonthlyFee}>
+
+                            <InputField label="Transport Monthly Fee" error={errors.transportMonthlyFee} required>
                                 <input
                                     type="number"
                                     {...register("transportMonthlyFee", { valueAsNumber: true })}
@@ -152,7 +113,8 @@ const EmptyFeeButton = () => {
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                                 />
                             </InputField>
-                            <InputField label="Exam Yearly Fee" error={errors.examYearlyFee}>
+
+                            <InputField label="Exam Yearly Fee" error={errors.examYearlyFee} required>
                                 <input
                                     type="number"
                                     {...register("examYearlyFee", { valueAsNumber: true })}
@@ -163,7 +125,7 @@ const EmptyFeeButton = () => {
                         </div>
 
                         <div className='flex justify-center items-center gap-6'>
-                            <InputField label="Admission One-Time Fee" error={errors.admissionOneTimeFee}>
+                            <InputField label="Admission One-Time Fee" error={errors.admissionOneTimeFee} required>
                                 <input
                                     type="number"
                                     {...register("admissionOneTimeFee", { valueAsNumber: true })}
@@ -171,7 +133,8 @@ const EmptyFeeButton = () => {
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                                 />
                             </InputField>
-                            <InputField label="Book Fee" error={errors.bookFee}>
+
+                            <InputField label="Book Fee" error={errors.bookFee} required>
                                 <input
                                     type="number"
                                     {...register("bookFee", { valueAsNumber: true })}
@@ -179,18 +142,19 @@ const EmptyFeeButton = () => {
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                                 />
                             </InputField>
-                            <InputField label="Id Card Fee" error={errors.idCardFee}>
+
+                            <InputField label="ID Card Fee" error={errors.idCardFee} required>
                                 <input
                                     type="number"
                                     {...register("idCardFee", { valueAsNumber: true })}
-                                    placeholder="Enter id card fee"
+                                    placeholder="Enter ID card fee"
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                                 />
                             </InputField>
                         </div>
 
                         <div className='flex justify-center items-center gap-6'>
-                            <InputField label="Activity Fee" error={errors.activityFee}>
+                            <InputField label="Activity Fee" error={errors.activityFee} required>
                                 <input
                                     type="number"
                                     {...register("activityFee", { valueAsNumber: true })}
@@ -199,19 +163,16 @@ const EmptyFeeButton = () => {
                                 />
                             </InputField>
                         </div>
+
                     </Flex>
 
                     <Flex gap="3" mt="4" justify="end">
-                        <Dialog.Close>
-                            <Button onClick={()=>reset()} variant="soft" color="gray">
-                                Cancel
-                            </Button>
-                        </Dialog.Close>
-                        <Dialog.Close>
-                            <Button onClick={handleSubmit(onSubmit)} disabled={isLoading}>
-                                Save
-                            </Button>
-                        </Dialog.Close>
+                        <Button onClick={handleClose} variant="soft" color="gray" disabled={isLoading}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSubmit(onSubmit)} disabled={isLoading} loading={isLoading}>
+                            Save
+                        </Button>
                     </Flex>
                 </Dialog.Content>
             </Dialog.Root>
@@ -225,40 +186,13 @@ const EmptyFeeButton = () => {
                 </Dialog.Trigger>
 
                 <Dialog.Content maxWidth="450px">
-                    <Dialog.Title>Edit profile</Dialog.Title>
+                    <Dialog.Title>Add Manually</Dialog.Title>
                     <Dialog.Description size="2" mb="4">
-                        Make changes to your profile.
+                        Coming soon.
                     </Dialog.Description>
-
-                    <Flex direction="column" gap="3">
-                        <label>
-                            <Text as="div" size="2" mb="1" weight="bold">
-                                Name
-                            </Text>
-                            <TextField.Root
-                                defaultValue="Freja Johnsen"
-                                placeholder="Enter your full name"
-                            />
-                        </label>
-                        <label>
-                            <Text as="div" size="2" mb="1" weight="bold">
-                                Email
-                            </Text>
-                            <TextField.Root
-                                defaultValue="freja@example.com"
-                                placeholder="Enter your email"
-                            />
-                        </label>
-                    </Flex>
-
                     <Flex gap="3" mt="4" justify="end">
                         <Dialog.Close>
-                            <Button variant="soft" color="gray">
-                                Cancel
-                            </Button>
-                        </Dialog.Close>
-                        <Dialog.Close>
-                            <Button>Save</Button>
+                            <Button variant="soft" color="gray">Cancel</Button>
                         </Dialog.Close>
                     </Flex>
                 </Dialog.Content>
@@ -273,46 +207,20 @@ const EmptyFeeButton = () => {
                 </Dialog.Trigger>
 
                 <Dialog.Content maxWidth="450px">
-                    <Dialog.Title>Edit profile</Dialog.Title>
+                    <Dialog.Title>Import from CSV</Dialog.Title>
                     <Dialog.Description size="2" mb="4">
-                        Make changes to your profile.
+                        Coming soon.
                     </Dialog.Description>
-
-                    <Flex direction="column" gap="3">
-                        <label>
-                            <Text as="div" size="2" mb="1" weight="bold">
-                                Name
-                            </Text>
-                            <TextField.Root
-                                defaultValue="Freja Johnsen"
-                                placeholder="Enter your full name"
-                            />
-                        </label>
-                        <label>
-                            <Text as="div" size="2" mb="1" weight="bold">
-                                Email
-                            </Text>
-                            <TextField.Root
-                                defaultValue="freja@example.com"
-                                placeholder="Enter your email"
-                            />
-                        </label>
-                    </Flex>
-
                     <Flex gap="3" mt="4" justify="end">
                         <Dialog.Close>
-                            <Button variant="soft" color="gray">
-                                Cancel
-                            </Button>
-                        </Dialog.Close>
-                        <Dialog.Close>
-                            <Button>Save</Button>
+                            <Button variant="soft" color="gray">Cancel</Button>
                         </Dialog.Close>
                     </Flex>
                 </Dialog.Content>
             </Dialog.Root>
-        </div>
-    )
-}
 
-export default EmptyFeeButton
+        </div>
+    );
+};
+
+export default EmptyFeeButton;
