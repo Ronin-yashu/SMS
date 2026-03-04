@@ -32,9 +32,9 @@ export default function RootLayout({ children }) {
             <Theme >
               <Navbar />
               {children}
-              <Toaster containerStyle={{ zIndex: 99999 }} />
               <Footer />
             </Theme>
+            <Toaster />
           </body>
         </StoreProvider>
       </SessionWrapper>
