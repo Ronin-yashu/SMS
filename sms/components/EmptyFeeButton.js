@@ -203,7 +203,7 @@ const EmptyFeeButton = () => {
 
                     <Flex gap="3" mt="4" justify="end">
                         <Dialog.Close>
-                            <Button variant="soft" color="gray">
+                            <Button onClick={()=>reset()} variant="soft" color="gray">
                                 Cancel
                             </Button>
                         </Dialog.Close>
