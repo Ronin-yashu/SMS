@@ -26,13 +26,13 @@ export const Login_Function = async (data) => {
       if (bcrypt.compareSync(data.password, school.adminPassword)) {
         console.log("password match");
         const payload = { username: data.email.split("@")[0], isAuthenticated: true }
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
         cookieStore.set({
           name: 'manually-session-token',
           value: token,
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          maxAge: 60 * 60,
+          maxAge: 60 * 60 * 24,
           path: '/',
           sameSite: 'lax',
         });
