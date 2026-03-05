@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import InputField from '@/components/InputField';
 
 const QuickSetupSchema = z.object({
-    baseMonthlyFee: z.number({ invalid_type_error: 'Base monthly fee is required' }).int().positive({ message: 'Must be a positive number' }),
+    tutionMonthlyFee: z.number({ invalid_type_error: 'Base monthly fee is required' }).int().positive({ message: 'Must be a positive number' }),
     transportMonthlyFee: z.number({ invalid_type_error: 'Transport fee is required' }).int().positive({ message: 'Must be a positive number' }),
     examYearlyFee: z.number({ invalid_type_error: 'Exam yearly fee is required' }).int().positive({ message: 'Must be a positive number' }),
     admissionOneTimeFee: z.number({ invalid_type_error: 'Admission fee is required' }).int().positive({ message: 'Must be a positive number' }),
@@ -31,7 +31,7 @@ const EmptyFeeButton = () => {
         resolver: zodResolver(QuickSetupSchema),
         mode: 'onSubmit',
         defaultValues: {
-            baseMonthlyFee: '',
+            tutionMonthlyFee: '',
             transportMonthlyFee: '',
             examYearlyFee: '',
             admissionOneTimeFee: '',
@@ -96,10 +96,10 @@ const EmptyFeeButton = () => {
                     <Flex direction="column" gap="3">
 
                         <div className='flex justify-center items-center gap-6'>
-                            <InputField label="Monthly Fee" error={errors.baseMonthlyFee} required>
+                            <InputField label="Tution Monthly Fee" error={errors.tutionMonthlyFee} required>
                                 <input
                                     type="number"
-                                    {...register("baseMonthlyFee", { valueAsNumber: true })}
+                                    {...register("tutionMonthlyFee", { valueAsNumber: true })}
                                     placeholder="Enter base monthly fee"
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                                 />
