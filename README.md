@@ -1,6 +1,6 @@
 # ⏰ 10:45 – Coming Soon
 
-A new **SaaS** era is loading...
+A new **SaaS** era is loading....
 
 We're building **10:45**, a next-gen platform that will change everything you know about management:
 - Seamless dashboards that feel like magic  
