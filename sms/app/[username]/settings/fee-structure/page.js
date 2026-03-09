@@ -3,11 +3,14 @@ import { IndianRupee, Zap } from 'lucide-react'
 import Check_fee_structure from '@/actions/Check_fee_structure';
 import EmptyFeeButton from '@/components/EmptyFeeButton';
 import FeeTable from '@/components/FeeTable';
+import GetAcademicYears from '@/actions/GetAcademicYears';
 
 const Page = async ({ params }) => {
 
   const { username } = await params
   const data = await Check_fee_structure(username)
+  const academic_years = await GetAcademicYears(username)
+  console.log(academic_years);
   if (!data || data.length == 0) {
     return (
       <div className='w-full h-full flex justify-center items-center flex-col gap-2'>
