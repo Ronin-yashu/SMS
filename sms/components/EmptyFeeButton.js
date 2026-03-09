@@ -11,10 +11,10 @@ import { useRouter } from 'next/navigation';
 
 const QuickSetupSchema = z.object({
     tuitionFeeMonthly: z.number({ invalid_type_error: 'Tuition fee is required' }).int().positive({ message: 'Must be a positive number' }),
-    transportMonthlyFee: z.number({ invalid_type_error: 'Transport fee is required' }).int().positive({ message: 'Must be a positive number' }),
-    examYearlyFee: z.number({ invalid_type_error: 'Exam yearly fee is required' }).int().positive({ message: 'Must be a positive number' }),
-    admissionOneTimeFee: z.number({ invalid_type_error: 'Admission fee is required' }).int().positive({ message: 'Must be a positive number' }),
-    bookFee: z.number({ invalid_type_error: 'Book fee is required' }).int().positive({ message: 'Must be a positive number' }),
+    transportFeeMonthly: z.number({ invalid_type_error: 'Transport fee is required' }).int().positive({ message: 'Must be a positive number' }),
+    examFeeYearly: z.number({ invalid_type_error: 'Exam yearly fee is required' }).int().positive({ message: 'Must be a positive number' }),
+    admissionFee: z.number({ invalid_type_error: 'Admission fee is required' }).int().positive({ message: 'Must be a positive number' }),
+    booksFee: z.number({ invalid_type_error: 'Book fee is required' }).int().positive({ message: 'Must be a positive number' }),
     idCardFee: z.number({ invalid_type_error: 'ID card fee is required' }).int().positive({ message: 'Must be a positive number' }),
     activityFee: z.number({ invalid_type_error: 'Activity fee is required' }).int().positive({ message: 'Must be a positive number' }),
 });
@@ -33,10 +33,10 @@ const EmptyFeeButton = () => {
         mode: 'onSubmit',
         defaultValues: {
             tuitionFeeMonthly: '',
-            transportMonthlyFee: '',
-            examYearlyFee: '',
-            admissionOneTimeFee: '',
-            bookFee: '',
+            transportFeeMonthly: '',
+            examFeeYearly: '',
+            admissionFee: '',
+            booksFee: '',
             idCardFee: '',
             activityFee: '',
         }
@@ -106,19 +106,19 @@ const EmptyFeeButton = () => {
                                 />
                             </InputField>
 
-                            <InputField label="Transport Monthly Fee" error={errors.transportMonthlyFee} required>
+                            <InputField label="Transport Monthly Fee" error={errors.transportFeeMonthly} required>
                                 <input
                                     type="number"
-                                    {...register("transportMonthlyFee", { valueAsNumber: true })}
+                                    {...register("transportFeeMonthly", { valueAsNumber: true })}
                                     placeholder="Enter transport monthly fee"
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                                 />
                             </InputField>
 
-                            <InputField label="Exam Yearly Fee" error={errors.examYearlyFee} required>
+                            <InputField label="Exam Yearly Fee" error={errors.examFeeYearly} required>
                                 <input
                                     type="number"
-                                    {...register("examYearlyFee", { valueAsNumber: true })}
+                                    {...register("examFeeYearly", { valueAsNumber: true })}
                                     placeholder="Enter exam yearly fee"
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                                 />
@@ -126,19 +126,19 @@ const EmptyFeeButton = () => {
                         </div>
 
                         <div className='flex justify-center items-center gap-6'>
-                            <InputField label="Admission One-Time Fee" error={errors.admissionOneTimeFee} required>
+                            <InputField label="Admission One-Time Fee" error={errors.admissionFee} required>
                                 <input
                                     type="number"
-                                    {...register("admissionOneTimeFee", { valueAsNumber: true })}
+                                    {...register("admissionFee", { valueAsNumber: true })}
                                     placeholder="Enter admission one-time fee"
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                                 />
                             </InputField>
 
-                            <InputField label="Book Fee" error={errors.bookFee} required>
+                            <InputField label="Book Fee" error={errors.booksFee} required>
                                 <input
                                     type="number"
-                                    {...register("bookFee", { valueAsNumber: true })}
+                                    {...register("booksFee", { valueAsNumber: true })}
                                     placeholder="Enter book fee"
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                                 />

@@ -11,7 +11,7 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
         const Validating_fee_structure = await Check_fee_structure(username);
-        if (Validating_fee_structure) {
+        if (Validating_fee_structure.length > 0) {
             return NextResponse.json({ error: 'Fee structure already exists for this school' }, { status: 400 });
         }
         const school = await prisma.school.findFirst({

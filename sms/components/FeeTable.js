@@ -1,41 +1,70 @@
-import { Select, Button } from '@radix-ui/themes'
 import React from 'react'
-const FeeTable = () => {
+import { Select, Button, Table } from '@radix-ui/themes'
+import { Zap, Plus, FileAxis3d } from 'lucide-react'
+const FeeTable = ({data}) => {
   return (
-    <div className='flex flex-col justify-center items-center bg-red-300'>
-      <header className='bg-green-500 w-full h-full flex justify-between px-10 items-center'>
+    <div className='flex flex-col justify-center w-full h-full p-6 space-y-6 items-center '>
+      <header className='bg-white border-b border-gray-100 rounded-2xl shadow-md w-full h-3/20 flex justify-between px-10 items-center'>
         <div className='flex justify-center items-center gap-5'>
-          <div>
-            <span>Academic year : </span>
-          </div>
+          <span className='font-bold'>Academic year : </span>
           <div>
             <Select.Root defaultValue="apple">
               <Select.Trigger />
               <Select.Content>
-                <Select.Group>
-                  <Select.Label>Fruits</Select.Label>
-                  <Select.Item value="orange">Orange</Select.Item>
-                  <Select.Item value="apple">Apple</Select.Item>
-                  <Select.Item value="grape" disabled>
-                    Grape
-                  </Select.Item>
-                </Select.Group>
-                <Select.Separator />
-                <Select.Group>
-                  <Select.Label>Vegetables</Select.Label>
-                  <Select.Item value="carrot">Carrot</Select.Item>
-                  <Select.Item value="potato">Potato</Select.Item>
-                </Select.Group>
+                <Select.Item value="orange">Orange</Select.Item>
+                <Select.Item value="apple">Apple</Select.Item>
               </Select.Content>
             </Select.Root>
           </div>
         </div>
         <div className='flex justify-center items-center gap-5'>
-          <Button>hy</Button>
-          <Button>hy</Button>
-          <Button>hy</Button>
+          <Button variant='soft'>
+            <FileAxis3d size={18} className='mr-2' />
+            Copy Year
+          </Button>
+          <Button variant='outline'>
+            <Zap size={18} className='mr-2' />
+            Quick Setup
+          </Button>
+          <Button >
+            <Plus size={18} className='mr-2' />
+            Add Fee Structure
+          </Button>
         </div>
       </header>
+      <div className='w-full h-85/100 '>
+        <Table.Root>
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeaderCell>Class</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Tuition/mo</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Transport/mo</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Exam/yr</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Admission</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Id Card</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Books</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Activity</Table.ColumnHeaderCell>
+            </Table.Row>
+          </Table.Header>
+
+          <Table.Body>
+            {data.map(data => (
+              <Table.Row key={data.id}>
+                <Table.RowHeaderCell>{data.class}</Table.RowHeaderCell>
+                <Table.Cell>{data.tuitionFeeMonthly}</Table.Cell>
+                <Table.Cell>{data.transportFeeMonthly}</Table.Cell>
+                <Table.Cell>{data.examFeeYearly}</Table.Cell>
+                <Table.Cell>{data.admissionFee}</Table.Cell>
+                <Table.Cell>{data.idCardFee}</Table.Cell>
+                <Table.Cell>{data.booksFee}</Table.Cell>
+                <Table.Cell>{data.activityFee}</Table.Cell>
+              </Table.Row>
+            ))}
+
+          </Table.Body>
+        </Table.Root>
+
+      </div>
     </div>
   )
 }
