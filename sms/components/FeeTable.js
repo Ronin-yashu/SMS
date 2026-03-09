@@ -1,3 +1,4 @@
+"use client"
 import React from 'react'
 import { Select, Button, Table } from '@radix-ui/themes'
 import { Zap, Plus, FileAxis3d } from 'lucide-react'
@@ -51,13 +52,13 @@ const FeeTable = ({data}) => {
             {data.map(data => (
               <Table.Row key={data.id}>
                 <Table.RowHeaderCell>{data.class}</Table.RowHeaderCell>
-                <Table.Cell>{data.tuitionFeeMonthly}</Table.Cell>
-                <Table.Cell>{data.transportFeeMonthly}</Table.Cell>
-                <Table.Cell>{data.examFeeYearly}</Table.Cell>
-                <Table.Cell>{data.admissionFee}</Table.Cell>
-                <Table.Cell>{data.idCardFee}</Table.Cell>
-                <Table.Cell>{data.booksFee}</Table.Cell>
-                <Table.Cell>{data.activityFee}</Table.Cell>
+                <Table.Cell>{"₹"+data.tuitionFeeMonthly}</Table.Cell>
+                <Table.Cell>{"₹"+data.transportFeeMonthly}</Table.Cell>
+                <Table.Cell>{"₹"+data.examFeeYearly}</Table.Cell>
+                <Table.Cell>{"₹"+data.admissionFee}</Table.Cell>
+                <Table.Cell>{"₹"+data.idCardFee}</Table.Cell>
+                <Table.Cell>{"₹"+data.booksFee}</Table.Cell>
+                <Table.Cell>{"₹"+data.activityFee}</Table.Cell>
               </Table.Row>
             ))}
 
