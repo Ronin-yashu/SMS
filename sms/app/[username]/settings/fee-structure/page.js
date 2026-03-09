@@ -10,7 +10,6 @@ const Page = async ({ params }) => {
   const { username } = await params
   const data = await Check_fee_structure(username)
   const academic_years = await GetAcademicYears(username)
-  console.log(academic_years);
   if (!data || data.length == 0) {
     return (
       <div className='w-full h-full flex justify-center items-center flex-col gap-2'>
@@ -30,7 +29,7 @@ const Page = async ({ params }) => {
 
   return (
     <div className='w-full h-full'>
-      <FeeTable data={data} />
+      <FeeTable data={data} academic_years={academic_years} />
     </div>
   )
 }
