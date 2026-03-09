@@ -2,7 +2,7 @@
 import React from 'react'
 import { Select, Button, Table } from '@radix-ui/themes'
 import { Zap, Plus, FileAxis3d } from 'lucide-react'
-const FeeTable = async ({ data, academic_years }) => {
+const FeeTable =  ({ data, academic_years }) => {
   const [selectedYear, setSelectedYear] = React.useState(academic_years?.[0] || '');
   return (
     <div className='flex flex-col justify-center w-full h-full p-6 space-y-6 items-center '>
