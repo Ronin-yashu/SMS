@@ -10,7 +10,7 @@ export default async function Check_fee_structure(username) {
             }
         });
         if (!school) return null
-        const feeStructure = await prisma.feeStructure.findFirst({
+        const feeStructure = await prisma.feeStructure.findMany({
             where: {
                 schoolId: school.id
             }
