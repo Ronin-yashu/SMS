@@ -9,23 +9,20 @@ export default async function GetAcademicYears(username) {
                 }
             }
         });
-        if (!school) return null
-        const academicYears = await prisma.feeStructure.findMany({
-            where: {
-                schoolId: school.id
-            },
-            select: {
-                academicYear: true,
-            },
-        })
-        if (!academicYears || academicYears.length == 0) return null
-        const academic_years = [...new Set(
-            feeStructure.map(f => f.academicYears)
-        )]
+        if (!school) return null;
 
-        return academic_years
+        const academicYears = await prisma.feeStructure.findMany({
+            where: { schoolId: school.id },
+            select: { academicYear: true },
+            distinct: ['academicYear'],
+            orderBy: { academicYear: 'desc' }
+        });
+
+        if (!academicYears || academicYears.length === 0) return null;
+        return academicYears.map(f => f.academicYear);
+
     } catch (error) {
-        console.log(error, "\n from check fee structure function");
-        return null
+        console.log(error, "\n from GetAcademicYears");
+        return null;
     }
 }
