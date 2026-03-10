@@ -26,15 +26,15 @@ const FeeTable = ({ data, academic_years }) => {
         <div className='flex flex-wrap gap-2'>
           <Button variant='soft' size="2">
             <FileAxis3d size={16} />
-            <span className='hidden sm:inline ml-1'>Copy Year</span>
+            <span className='ml-1'>Copy Year</span>
           </Button>
           <Button variant='outline' size="2">
             <Zap size={16} />
-            <span className='hidden sm:inline ml-1'>Quick Setup</span>
+            <span className='ml-1'>Quick Setup</span>
           </Button>
           <Button size="2">
             <Plus size={16} />
-            <span className='hidden sm:inline ml-1'>Add Fee Structure</span>
+            <span className='ml-1'>Add Fee Structure</span>
           </Button>
         </div>
       </header>

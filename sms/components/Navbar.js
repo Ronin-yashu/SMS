@@ -24,12 +24,8 @@ const Navbar = () => {
   const isPublicRoute = publicRoutes.includes(pathname)
   const isLoggedIn = !!(session) || !isPublicRoute
 
-  // Next-Auth signout
-  const handleOAuthSignOut = () => {
-    signOut({ callbackUrl: '/login' })
-  }
+  const handleOAuthSignOut = () => signOut({ callbackUrl: '/login' })
 
-  // Manual signout — calls server API to delete httpOnly cookie
   const handleManualSignOut = async () => {
     await fetch('/api/signout', { method: 'POST' })
     router.push('/login')
@@ -38,37 +34,22 @@ const Navbar = () => {
 
   const AuthButton = () => {
     if (isAuthPage) return null
-
-    // OAuth session (Google/GitHub)
     if (session) {
       return (
-        <button
-          onClick={handleOAuthSignOut}
-          className="text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl font-medium rounded-2xl text-sm px-4 py-2.5"
-        >
+        <button onClick={handleOAuthSignOut} className="text-white bg-linear-to-br from-purple-600 to-blue-500 font-medium rounded-2xl text-sm px-4 py-2.5">
           Sign-out
         </button>
       )
     }
-
-    // Manual login — non-public route = logged in manually
     if (!isPublicRoute) {
       return (
-        <button
-          onClick={handleManualSignOut}
-          className="text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl font-medium rounded-2xl text-sm px-4 py-2.5"
-        >
+        <button onClick={handleManualSignOut} className="text-white bg-linear-to-br from-purple-600 to-blue-500 font-medium rounded-2xl text-sm px-4 py-2.5">
           Sign-out
         </button>
       )
     }
-
-    // Not logged in
     return (
-      <Link
-        className="text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl font-medium rounded-2xl text-sm px-4 py-2.5"
-        href="/login"
-      >
+      <Link className="text-white bg-linear-to-br from-purple-600 to-blue-500 font-medium rounded-2xl text-sm px-4 py-2.5" href="/login">
         Sign-in
       </Link>
     )
@@ -78,16 +59,31 @@ const Navbar = () => {
     <nav className='bg-white shadow-md'>
       <div className='flex justify-between px-6 md:px-8 items-center h-18'>
 
-        <div className='flex flex-col justify-center items-center gap-1'>
-          <div onClick={() => router.push('/')} className='text-3xl md:text-4xl font-bold cursor-pointer'>
-            <span className='text-blue-600'>O</span>
-            <span className='text-blue-900'>z</span>
-            <span className='text-purple-600'>O</span>
-            <span className='text-orange-500'>f</span>
-            <span className='text-orange-500'>f</span>
-          </div>
-          <div className='hidden sm:flex font-light text-xs md:text-sm leading-4 text-blue-800'>
-            <span>Ten Zero : Four Five</span>
+        <div className='flex items-center gap-3'>
+          {isLoggedIn && (
+            <button
+              id="sidebar-toggle"
+              className='lg:hidden p-2 rounded-lg hover:bg-gray-100 transition'
+              onClick={() => {
+                const event = new CustomEvent('toggle-sidebar')
+                window.dispatchEvent(event)
+              }}
+            >
+              <Menu size={22} />
+            </button>
+          )}
+
+          <div className='flex flex-col justify-center items-center gap-1'>
+            <div onClick={() => router.push('/')} className='text-3xl md:text-4xl font-bold cursor-pointer'>
+              <span className='text-blue-600'>O</span>
+              <span className='text-blue-900'>z</span>
+              <span className='text-purple-600'>O</span>
+              <span className='text-orange-500'>f</span>
+              <span className='text-orange-500'>f</span>
+            </div>
+            <div className='hidden sm:flex font-light text-xs md:text-sm leading-4 text-blue-800'>
+              <span>Ten Zero : Four Five</span>
+            </div>
           </div>
         </div>
 
@@ -122,7 +118,6 @@ const Navbar = () => {
               </DropdownMenu.Root>
             </ul>
 
-            {/* Mobile hamburger */}
             <div className='flex md:hidden items-center gap-3'>
               <AuthButton />
               <button onClick={() => setMobileOpen(!mobileOpen)} className='p-2 rounded-lg hover:bg-gray-100 transition'>

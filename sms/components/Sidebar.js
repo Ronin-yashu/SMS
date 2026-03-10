@@ -1,12 +1,12 @@
 "use client"
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@radix-ui/themes'
 import {
   LayoutDashboard, Users, UserCheck, BookOpen,
   ClipboardList, BarChart2, Calendar, Settings,
-  ChevronLeft, ChevronRight, GraduationCap, Menu, X
+  ChevronLeft, ChevronRight, GraduationCap, X
 } from 'lucide-react'
 
 const menuItems = [
@@ -24,6 +24,14 @@ export default function Sidebar({ username }) {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
+
+  useEffect(() => {
+    const handler = () => setMobileOpen(prev => !prev)
+    window.addEventListener('toggle-sidebar', handler)
+    return () => window.removeEventListener('toggle-sidebar', handler)
+  }, [])
+
+  useEffect(() => { setMobileOpen(false) }, [pathname])
 
   const NavContent = () => (
     <>
@@ -68,19 +76,13 @@ export default function Sidebar({ username }) {
 
   return (
     <>
-      <button
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-xl shadow border border-gray-100"
-        onClick={() => setMobileOpen(!mobileOpen)}
-      >
-        {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-      </button>
-
       {mobileOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/30 z-40"
           onClick={() => setMobileOpen(false)}
         />
       )}
+
       <aside className={`
         lg:hidden fixed top-0 left-0 h-full z-40 w-64 bg-white border-r border-gray-100 shadow-lg flex flex-col
         transition-transform duration-300
@@ -100,7 +102,7 @@ export default function Sidebar({ username }) {
         <NavContent />
       </aside>
 
-       <aside className={`hidden lg:flex ${collapsed ? 'w-16' : 'w-64'} transition-all duration-300 h-full bg-white border-r border-gray-100 shadow-sm flex-col`}>
+      <aside className={`hidden lg:flex ${collapsed ? 'w-16' : 'w-64'} transition-all duration-300 h-full bg-white border-r border-gray-100 shadow-sm flex-col`}>
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           {!collapsed && (
             <div className="flex items-center gap-2">
