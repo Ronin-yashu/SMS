@@ -17,7 +17,7 @@ const Login = () => {
             toast.success('Welcome back!', { id: toastId })
         } catch (err) {
             if (!err?.message?.includes('NEXT_REDIRECT')) {
-                toast.error('Invalid email or password', { id: toastId })
+                toast.error(err.message || 'Something went wrong', { id: toastId })
             } else {
                 toast.dismiss(toastId)
             }
