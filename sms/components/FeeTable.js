@@ -2,41 +2,44 @@
 import React from 'react'
 import { Select, Button, Table } from '@radix-ui/themes'
 import { Zap, Plus, FileAxis3d } from 'lucide-react'
-const FeeTable =  ({ data, academic_years }) => {
-  const [selectedYear, setSelectedYear] = React.useState(academic_years?.[0] || '');
-  return (
-    <div className='flex flex-col justify-center w-full h-full p-6 space-y-6 items-center '>
-      <header className='bg-white border-b border-gray-100 rounded-2xl shadow-md w-full h-3/20 flex justify-between px-10 items-center'>
-        <div className='flex justify-center items-center gap-5'>
-          <span className='font-bold'>Academic year : </span>
-          <div>
-            <Select.Root value={selectedYear} onValueChange={(val) => setSelectedYear(val)}>
-              <Select.Trigger />
-              <Select.Content>
-                {academic_years.map(item => (
-                  <Select.Item key={item} value={item}>{item}</Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Root>
 
-          </div>
+const FeeTable = ({ data, academic_years }) => {
+  const [selectedYear, setSelectedYear] = React.useState(academic_years?.[0] || '');
+
+  return (
+    <div className='flex flex-col w-full h-full p-3 sm:p-6 space-y-4 sm:space-y-6'>
+
+      <header className='bg-white border-b border-gray-100 rounded-2xl shadow-md w-full flex flex-col sm:flex-row justify-between px-4 sm:px-8 py-4 gap-4 items-start sm:items-center'>
+
+        <div className='flex items-center gap-3'>
+          <span className='font-bold text-sm sm:text-base whitespace-nowrap'>Academic year:</span>
+          <Select.Root value={selectedYear} onValueChange={(val) => setSelectedYear(val)}>
+            <Select.Trigger />
+            <Select.Content>
+              {academic_years.map(item => (
+                <Select.Item key={item} value={item}>{item}</Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
         </div>
-        <div className='flex justify-center items-center gap-5'>
-          <Button variant='soft'>
-            <FileAxis3d size={18} className='mr-2' />
-            Copy Year
+
+        <div className='flex flex-wrap gap-2'>
+          <Button variant='soft' size="2">
+            <FileAxis3d size={16} />
+            <span className='hidden sm:inline ml-1'>Copy Year</span>
           </Button>
-          <Button variant='outline'>
-            <Zap size={18} className='mr-2' />
-            Quick Setup
+          <Button variant='outline' size="2">
+            <Zap size={16} />
+            <span className='hidden sm:inline ml-1'>Quick Setup</span>
           </Button>
-          <Button >
-            <Plus size={18} className='mr-2' />
-            Add Fee Structure
+          <Button size="2">
+            <Plus size={16} />
+            <span className='hidden sm:inline ml-1'>Add Fee Structure</span>
           </Button>
         </div>
       </header>
-      <div className='w-full h-85/100 '>
+
+      <div className='w-full overflow-x-auto rounded-xl'>
         <Table.Root>
           <Table.Header>
             <Table.Row>
@@ -50,25 +53,23 @@ const FeeTable =  ({ data, academic_years }) => {
               <Table.ColumnHeaderCell>Activity</Table.ColumnHeaderCell>
             </Table.Row>
           </Table.Header>
-
           <Table.Body>
-            {data.map(data => (
-              <Table.Row key={data.id}>
-                <Table.RowHeaderCell>{data.class}</Table.RowHeaderCell>
-                <Table.Cell>{"₹" + data.tuitionFeeMonthly}</Table.Cell>
-                <Table.Cell>{"₹" + data.transportFeeMonthly}</Table.Cell>
-                <Table.Cell>{"₹" + data.examFeeYearly}</Table.Cell>
-                <Table.Cell>{"₹" + data.admissionFee}</Table.Cell>
-                <Table.Cell>{"₹" + data.idCardFee}</Table.Cell>
-                <Table.Cell>{"₹" + data.booksFee}</Table.Cell>
-                <Table.Cell>{"₹" + data.activityFee}</Table.Cell>
+            {data.map(item => (
+              <Table.Row key={item.id}>
+                <Table.RowHeaderCell>{item.class}</Table.RowHeaderCell>
+                <Table.Cell>{"₹" + item.tuitionFeeMonthly}</Table.Cell>
+                <Table.Cell>{"₹" + item.transportFeeMonthly}</Table.Cell>
+                <Table.Cell>{"₹" + item.examFeeYearly}</Table.Cell>
+                <Table.Cell>{"₹" + item.admissionFee}</Table.Cell>
+                <Table.Cell>{"₹" + item.idCardFee}</Table.Cell>
+                <Table.Cell>{"₹" + item.booksFee}</Table.Cell>
+                <Table.Cell>{"₹" + item.activityFee}</Table.Cell>
               </Table.Row>
             ))}
-
           </Table.Body>
         </Table.Root>
-
       </div>
+
     </div>
   )
 }
