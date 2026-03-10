@@ -36,7 +36,7 @@ const Navbar = () => {
 
   if (!isClient) return null
 
-  // ✅ Key check — is user logged in?
+  // Key check
   const isLoggedIn = !!(session || manualToken)
   const isAuthPage = pathname === '/login' || pathname === '/register'
 
@@ -90,9 +90,10 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* ✅ Only show nav links when NOT logged in */}
+        {/* Nav links + mobile hamburger — only when NOT logged in */}
         {!isLoggedIn && (
           <>
+            {/* Desktop nav links */}
             <ul className='hidden md:flex gap-8 justify-center items-center text-orange-500 font-semibold text-lg'>
               <Link href="/pricing">Pricing</Link>
               <Link href="/contribute">Contribute</Link>
@@ -124,7 +125,7 @@ const Navbar = () => {
               </DropdownMenu.Root>
             </ul>
 
-            {/* Mobile hamburger — only when not logged in */}
+            {/* Mobile: Sign-in + hamburger */}
             <div className='flex md:hidden items-center gap-3'>
               <AuthButton />
               <button
@@ -137,7 +138,7 @@ const Navbar = () => {
           </>
         )}
 
-        {/* Auth button — desktop always, mobile only when logged in */}
+        {/* Auth button — desktop always, mobile only when logged in (no hamburger shown) */}
         <div className={`${isLoggedIn ? 'flex' : 'hidden md:flex'} gap-4 items-center`}>
           <AuthButton />
         </div>
