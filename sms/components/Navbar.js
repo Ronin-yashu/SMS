@@ -5,58 +5,44 @@ import { DropdownMenu, Button } from '@radix-ui/themes'
 import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
-import { getCookie, deleteCookie } from 'cookies-next'
+import { deleteCookie } from 'cookies-next'
 import { Menu, X } from 'lucide-react'
 
 const Navbar = () => {
   const pathname = usePathname()
   const router = useRouter()
   const { data: session } = useSession()
-  const [manualToken, setmanualToken] = React.useState(null)
   const [isClient, setisClient] = React.useState(false)
   const [mobileOpen, setMobileOpen] = React.useState(false)
 
   React.useEffect(() => { setisClient(true) }, [])
-
-  React.useEffect(() => {
-    if (isClient) {
-      const token = getCookie('manually-session-token')
-      setmanualToken(token || null)
-    }
-  }, [isClient, pathname, session])
-
   React.useEffect(() => { setMobileOpen(false) }, [pathname])
 
-  const handleManualSignOut = () => {
+  if (!isClient) return null
+
+  const isAuthPage = pathname === '/login' || pathname === '/register'
+
+  // Public routes — NOT logged in pages
+  const publicRoutes = ['/', '/pricing', '/contribute', '/about', '/Blog', '/login', '/register', '/forgot-password']
+  const isPublicRoute = publicRoutes.includes(pathname)
+
+  // If not a public route → user must be logged in (inside /[username]/...)
+  const isLoggedIn = !!(session) || !isPublicRoute
+
+  const handleSignOut = () => {
     deleteCookie('manually-session-token')
-    setmanualToken(null)
+    signOut({ callbackUrl: '/login' })
     router.push('/login')
     router.refresh()
   }
 
-  if (!isClient) return null
-
-  // Key check
-  const isLoggedIn = !!(session || manualToken)
-  const isAuthPage = pathname === '/login' || pathname === '/register'
-
   const AuthButton = () => {
     if (isAuthPage) return null
-    if (session) {
+    if (isLoggedIn) {
       return (
         <button
-          onClick={() => signOut({ callbackUrl: '/login' })}
-          className="text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl font-medium rounded-2xl text-sm px-4 py-2.5"
-        >
-          Sign-out
-        </button>
-      )
-    }
-    if (manualToken) {
-      return (
-        <button
-          onClick={handleManualSignOut}
-          className="text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl font-medium rounded-2xl text-sm px-4 py-2.5"
+          onClick={handleSignOut}
+          className="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl font-medium rounded-2xl text-sm px-4 py-2.5"
         >
           Sign-out
         </button>
@@ -64,7 +50,7 @@ const Navbar = () => {
     }
     return (
       <Link
-        className="text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl font-medium rounded-2xl text-sm px-4 py-2.5"
+        className="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl font-medium rounded-2xl text-sm px-4 py-2.5"
         href="/login"
       >
         Sign-in
@@ -90,10 +76,9 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Nav links + mobile hamburger — only when NOT logged in */}
+        {/* Nav links + hamburger — only when NOT logged in */}
         {!isLoggedIn && (
           <>
-            {/* Desktop nav links */}
             <ul className='hidden md:flex gap-8 justify-center items-center text-orange-500 font-semibold text-lg'>
               <Link href="/pricing">Pricing</Link>
               <Link href="/contribute">Contribute</Link>
@@ -125,7 +110,6 @@ const Navbar = () => {
               </DropdownMenu.Root>
             </ul>
 
-            {/* Mobile: Sign-in + hamburger */}
             <div className='flex md:hidden items-center gap-3'>
               <AuthButton />
               <button
@@ -138,14 +122,14 @@ const Navbar = () => {
           </>
         )}
 
-        {/* Auth button — desktop always, mobile only when logged in (no hamburger shown) */}
+        {/* Auth button */}
         <div className={`${isLoggedIn ? 'flex' : 'hidden md:flex'} gap-4 items-center`}>
           <AuthButton />
         </div>
 
       </div>
 
-      {/* Mobile dropdown menu — only when not logged in */}
+      {/* Mobile dropdown — only when not logged in */}
       {!isLoggedIn && mobileOpen && (
         <div className='md:hidden border-t border-gray-100 px-6 py-4 flex flex-col gap-4 bg-white'>
           <Link href="/pricing" className='text-orange-500 font-semibold text-base py-2 border-b border-gray-50'>Pricing</Link>
