@@ -37,19 +37,19 @@ export default function StatsCards({ stats }) {
   ]
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+    <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
       {cards.map((stat) => (
-        <div key={stat.label} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className={`${stat.bg} p-3 rounded-xl`}>
-              <stat.icon size={22} className={stat.text} />
+        <div key={stat.label} className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className={`${stat.bg} p-2.5 sm:p-3 rounded-xl`}>
+              <stat.icon size={20} className={stat.text} />
             </div>
-            <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+            <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full hidden sm:block">
               {stat.change}
             </span>
           </div>
-          <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
-          <p className="text-sm text-gray-500 mt-1">{stat.label}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-800">{stat.value}</p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">{stat.label}</p>
         </div>
       ))}
     </div>
