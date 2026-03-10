@@ -5,7 +5,7 @@ export default async function Check_fee_structure(username) {
         const school = await prisma.school.findFirst({
             where: {
                 adminEmail: {
-                    contains: `${username}@`
+                    startsWith: `${username}@`
                 }
             }
         });

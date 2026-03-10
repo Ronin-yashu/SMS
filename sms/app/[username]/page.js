@@ -14,7 +14,7 @@ async function getDashboardData(username) {
     const school = await prisma.school.findFirst({
       where: {
         adminEmail: {
-          contains: `${username}@`
+          startsWith: `${username}@`
         }
       }
     });

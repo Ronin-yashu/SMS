@@ -17,7 +17,7 @@ export async function POST(request) {
         const school = await prisma.school.findFirst({
             where: {
                 adminEmail: {
-                    contains: `${username}@`
+                    startsWith: `${username}@`
                 }
             }
         });
