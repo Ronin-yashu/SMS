@@ -20,6 +20,7 @@ async function getDashboardData(username) {
     });
 
     if (!school) return null;
+
     const stats = {
       totalStudents: school.studentStrength,
       teachingStaff: school.teachingStaff,
@@ -40,13 +41,16 @@ const page = async ({ params }) => {
   const token = cookieStore.get('manually-session-token');
 
   const { username } = await params;
-  
+
   const session = await getServerSession();
+
   if (!session) {
+    if (!token?.value) return notFound();
+
     try {
       const decoded = jwt.verify(token.value, process.env.JWT_SECRET);
       if (decoded.username !== username) {
-        notFound();
+        return notFound();
       }
     } catch (error) {
       console.log(error);
@@ -54,12 +58,12 @@ const page = async ({ params }) => {
     }
   } else {
     if (username !== session.user.email.split("@")[0]) {
-      notFound();
+      return notFound();
     }
   }
 
   const data = await getDashboardData(username);
-  
+
   if (!data) {
     return (
       <div className="p-6">
