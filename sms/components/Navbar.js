@@ -16,9 +16,7 @@ const Navbar = () => {
   const [isClient, setisClient] = React.useState(false)
   const [mobileOpen, setMobileOpen] = React.useState(false)
 
-  React.useEffect(() => {
-    setisClient(true)
-  }, [])
+  React.useEffect(() => { setisClient(true) }, [])
 
   React.useEffect(() => {
     if (isClient) {
@@ -27,9 +25,7 @@ const Navbar = () => {
     }
   }, [isClient, pathname, session])
 
-  React.useEffect(() => {
-    setMobileOpen(false)
-  }, [pathname])
+  React.useEffect(() => { setMobileOpen(false) }, [pathname])
 
   const handleManualSignOut = () => {
     deleteCookie('manually-session-token')
@@ -40,12 +36,16 @@ const Navbar = () => {
 
   if (!isClient) return null
 
+  // ✅ Key check — is user logged in?
+  const isLoggedIn = !!(session || manualToken)
+  const isAuthPage = pathname === '/login' || pathname === '/register'
+
   const AuthButton = () => {
-    if (pathname === "/login" || pathname === "/register") return null
+    if (isAuthPage) return null
     if (session) {
       return (
         <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={() => signOut({ callbackUrl: '/login' })}
           className="text-white bg-linear-to-br from-purple-600 to-blue-500 hover:bg-linear-to-bl font-medium rounded-2xl text-sm px-4 py-2.5"
         >
           Sign-out
@@ -76,6 +76,7 @@ const Navbar = () => {
     <nav className='bg-white shadow-md'>
       <div className='flex justify-between px-6 md:px-8 items-center h-18'>
 
+        {/* Logo */}
         <div className='flex flex-col justify-center items-center gap-1'>
           <div onClick={() => router.push('/')} className='text-3xl md:text-4xl font-bold cursor-pointer'>
             <span className='text-blue-600'>O</span>
@@ -89,56 +90,62 @@ const Navbar = () => {
           </div>
         </div>
 
-        <ul className='hidden md:flex gap-8 justify-center items-center text-orange-500 font-semibold text-lg'>
-          <Link href="/pricing">Pricing</Link>
-          <Link href="/contribute">Contribute</Link>
-          <Link href="/about">About</Link>
-          <Link href="/Blog">Blog</Link>
-
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-              <Button variant="ghost" size="3">
-                More
-                <DropdownMenu.TriggerIcon />
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Item shortcut="⌘ D">Documentation</DropdownMenu.Item>
-              <DropdownMenu.Item shortcut="⌘ R">Releases</DropdownMenu.Item>
-              <DropdownMenu.Separator />
-              <DropdownMenu.Item shortcut="⌘ S">Support</DropdownMenu.Item>
-              <DropdownMenu.Sub>
-                <DropdownMenu.SubTrigger>More</DropdownMenu.SubTrigger>
-                <DropdownMenu.SubContent>
-                  <DropdownMenu.Item>Meet an advisor</DropdownMenu.Item>
-                  <DropdownMenu.Item>Customer References</DropdownMenu.Item>
+        {/* ✅ Only show nav links when NOT logged in */}
+        {!isLoggedIn && (
+          <>
+            <ul className='hidden md:flex gap-8 justify-center items-center text-orange-500 font-semibold text-lg'>
+              <Link href="/pricing">Pricing</Link>
+              <Link href="/contribute">Contribute</Link>
+              <Link href="/about">About</Link>
+              <Link href="/Blog">Blog</Link>
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger>
+                  <Button variant="ghost" size="3">
+                    More <DropdownMenu.TriggerIcon />
+                  </Button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content>
+                  <DropdownMenu.Item shortcut="⌘ D">Documentation</DropdownMenu.Item>
+                  <DropdownMenu.Item shortcut="⌘ R">Releases</DropdownMenu.Item>
                   <DropdownMenu.Separator />
-                  <DropdownMenu.Item>Implementation Services</DropdownMenu.Item>
-                </DropdownMenu.SubContent>
-              </DropdownMenu.Sub>
-              <DropdownMenu.Separator />
-              <DropdownMenu.Item>Github</DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-        </ul>
+                  <DropdownMenu.Item shortcut="⌘ S">Support</DropdownMenu.Item>
+                  <DropdownMenu.Sub>
+                    <DropdownMenu.SubTrigger>More</DropdownMenu.SubTrigger>
+                    <DropdownMenu.SubContent>
+                      <DropdownMenu.Item>Meet an advisor</DropdownMenu.Item>
+                      <DropdownMenu.Item>Customer References</DropdownMenu.Item>
+                      <DropdownMenu.Separator />
+                      <DropdownMenu.Item>Implementation Services</DropdownMenu.Item>
+                    </DropdownMenu.SubContent>
+                  </DropdownMenu.Sub>
+                  <DropdownMenu.Separator />
+                  <DropdownMenu.Item>Github</DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+            </ul>
 
-        <div className='hidden md:flex gap-4 justify-center items-center'>
-          <AuthButton />
-        </div>
+            {/* Mobile hamburger — only when not logged in */}
+            <div className='flex md:hidden items-center gap-3'>
+              <AuthButton />
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className='p-2 rounded-lg hover:bg-gray-100 transition'
+              >
+                {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+              </button>
+            </div>
+          </>
+        )}
 
-        <div className='flex md:hidden items-center gap-3'>
+        {/* Auth button — desktop always, mobile only when logged in */}
+        <div className={`${isLoggedIn ? 'flex' : 'hidden md:flex'} gap-4 items-center`}>
           <AuthButton />
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className='p-2 rounded-lg hover:bg-gray-100 transition'
-          >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
         </div>
 
       </div>
 
-      {mobileOpen && (
+      {/* Mobile dropdown menu — only when not logged in */}
+      {!isLoggedIn && mobileOpen && (
         <div className='md:hidden border-t border-gray-100 px-6 py-4 flex flex-col gap-4 bg-white'>
           <Link href="/pricing" className='text-orange-500 font-semibold text-base py-2 border-b border-gray-50'>Pricing</Link>
           <Link href="/contribute" className='text-orange-500 font-semibold text-base py-2 border-b border-gray-50'>Contribute</Link>
