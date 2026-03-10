@@ -19,7 +19,6 @@ export async function proxy(request) {
   const oauthToken = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
   const manualCookie = request.cookies.get('manually-session-token')
 
-  // Verify JWT properly instead of just checking existence
   let manualTokenValid = false
   let username = null
 
@@ -30,7 +29,6 @@ export async function proxy(request) {
       manualTokenValid = true
       username = payload.username
     } catch {
-      // expired or tampered — treat as logged out
       manualTokenValid = false
     }
   }
