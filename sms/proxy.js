@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import * as jose from 'jose'
 
 const publicRoutes = ['/pricing', '/contribute', '/about', '/Blog', '/forgot-password']
 const authRoutes = ['/login', '/register']
@@ -16,22 +17,28 @@ export async function proxy(request) {
   }
 
   const oauthToken = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
-
   const manualCookie = request.cookies.get('manually-session-token')
 
-  const isLoggedIn = !!oauthToken || !!manualCookie?.value
-
+  // Verify JWT properly instead of just checking existence
+  let manualTokenValid = false
   let username = null
-  if (oauthToken?.email) {
-    username = oauthToken.email.split('@')[0]
-  } else if (manualCookie?.value) {
 
+  if (manualCookie?.value) {
     try {
-      const base64Payload = manualCookie.value.split('.')[1]
-      const decoded = JSON.parse(atob(base64Payload))
-      username = decoded.username
+      const secret = new TextEncoder().encode(process.env.JWT_SECRET)
+      const { payload } = await jose.jwtVerify(manualCookie.value, secret)
+      manualTokenValid = true
+      username = payload.username
     } catch {
+      // expired or tampered — treat as logged out
+      manualTokenValid = false
     }
+  }
+
+  const isLoggedIn = !!oauthToken || manualTokenValid
+
+  if (!username && oauthToken?.email) {
+    username = oauthToken.email.split('@')[0]
   }
 
   if (isLoggedIn && username) {
