@@ -14,8 +14,14 @@ export async function PATCH(request) {
             return NextResponse.json({ error: 'Fee structure ID is required' }, { status: 400 });
         }
 
-        const updatedStructure = await prisma.feeStructure.update({
-            where: { id: data.id },
+        // ✅ Ownership check — only updates if fee structure belongs to the logged-in school
+        await prisma.feeStructure.update({
+            where: {
+                id: data.id,
+                school: {
+                    adminEmail: { startsWith: `${username}@` }
+                }
+            },
             data: {
                 tuitionFeeMonthly: data.tuitionFeeMonthly,
                 transportFeeMonthly: data.transportFeeMonthly,
@@ -30,6 +36,9 @@ export async function PATCH(request) {
         return NextResponse.json({ message: 'Fee Structure Updated' }, { status: 200 });
 
     } catch (error) {
+        if (error.code === 'P2025') {
+            return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 403 });
+        }
         console.log(error);
         return NextResponse.json({ error: 'Failed to update fee structure' }, { status: 500 });
     }
