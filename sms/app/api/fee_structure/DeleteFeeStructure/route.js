@@ -9,7 +9,6 @@ export async function DELETE(request) {
                 id: data.id,
             }
         });
-        console.log('Deleted user:', DeleteStructure);
         return NextResponse.json({ message: 'Fee Structure Deleted' }, { status: 200 });
 
     } catch (error) {

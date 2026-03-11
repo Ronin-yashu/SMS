@@ -10,7 +10,6 @@ export async function PATCH(request) {
             },
             data: data
         });
-        console.log('Updated user:', updatedStructure);
         return NextResponse.json({ message: 'Fee Structure Updated' }, { status: 200 });
 
     } catch (error) {

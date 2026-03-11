@@ -6,7 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import InputField from '@/components/InputField';
 import { useRouter } from 'next/navigation';
-import { Select, Button, Table, Dialog, Flex, AlertDialog } from '@radix-ui/themes'
+import { useTransition } from 'react';
+import { Select, Button, Table, Dialog, Flex, AlertDialog, Skeleton } from '@radix-ui/themes'
 import { Zap, Plus, FileAxis3d, SquarePen, Trash } from 'lucide-react'
 
 const EditFeeStructure = z.object({
@@ -19,12 +20,27 @@ const EditFeeStructure = z.object({
   activityFee: z.number({ invalid_type_error: 'Activity fee is required' }).int().positive(),
 });
 
+const SkeletonRows = ({ count = 8 }) => (
+  <>
+    {Array.from({ length: count }).map((_, i) => (
+      <Table.Row key={i}>
+        {Array.from({ length: 9 }).map((_, j) => (
+          <Table.Cell key={j}>
+            <Skeleton width="60px" height="16px" />
+          </Table.Cell>
+        ))}
+      </Table.Row>
+    ))}
+  </>
+);
+
 const FeeTable = ({ data, academic_years }) => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [selectedItem, setSelectedItem] = React.useState(null);
   const [selectedYear, setSelectedYear] = React.useState(academic_years?.[0] || '');
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
@@ -41,7 +57,9 @@ const FeeTable = ({ data, academic_years }) => {
     }
   });
 
-  const filteredData = data.filter(item => item.academicYear === selectedYear);
+  const filteredData = data
+    .filter(item => item.academicYear === selectedYear)
+    .sort((a, b) => parseInt(a.class) - parseInt(b.class));
 
   const handleEditOpen = (item) => {
     setSelectedItem(item);
@@ -68,6 +86,12 @@ const FeeTable = ({ data, academic_years }) => {
     setDeleteOpen(true);
   };
 
+  const refreshData = () => {
+    startTransition(() => {
+      router.refresh();
+    });
+  };
+
   const onSubmit = async (formData) => {
     setIsLoading(true);
     const promise = fetch("/api/fee_structure/EditFeeStructure", {
@@ -86,7 +110,7 @@ const FeeTable = ({ data, academic_years }) => {
       error: (err) => `Error: ${err.message}`,
     }).then(() => {
       handleEditClose();
-      router.refresh();
+      refreshData();
     }).catch(() => {}).finally(() => setIsLoading(false));
   };
 
@@ -108,7 +132,7 @@ const FeeTable = ({ data, academic_years }) => {
     }).then(() => {
       setDeleteOpen(false);
       setSelectedItem(null);
-      router.refresh();
+      refreshData();
     }).catch(() => {});
   };
 
@@ -135,7 +159,7 @@ const FeeTable = ({ data, academic_years }) => {
       </header>
 
       <div className='w-full overflow-x-auto rounded-xl'>
-        {filteredData.length === 0 ? (
+        {filteredData.length === 0 && !isPending ? (
           <div className='flex flex-col items-center justify-center py-16 text-gray-400 gap-2'>
             <span className='text-4xl'>🚫</span>
             <span className='text-sm'>No fee structure found for {selectedYear}</span>
@@ -156,26 +180,30 @@ const FeeTable = ({ data, academic_years }) => {
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {filteredData.map(item => (
-                <Table.Row key={item.id}>
-                  <Table.RowHeaderCell>{item.class}</Table.RowHeaderCell>
-                  <Table.Cell>{"₹" + item.tuitionFeeMonthly}</Table.Cell>
-                  <Table.Cell>{"₹" + item.transportFeeMonthly}</Table.Cell>
-                  <Table.Cell>{"₹" + item.examFeeYearly}</Table.Cell>
-                  <Table.Cell>{"₹" + item.admissionFee}</Table.Cell>
-                  <Table.Cell>{"₹" + item.idCardFee}</Table.Cell>
-                  <Table.Cell>{"₹" + item.booksFee}</Table.Cell>
-                  <Table.Cell>{"₹" + item.activityFee}</Table.Cell>
-                  <Table.Cell className='flex gap-3 items-center'>
-                    <Button variant='ghost' onClick={() => handleEditOpen(item)}>
-                      <SquarePen size={18} />
-                    </Button>
-                    <Button color="red" variant='ghost' onClick={() => handleDeleteOpen(item)}>
-                      <Trash size={18} />
-                    </Button>
-                  </Table.Cell>
-                </Table.Row>
-              ))}
+              {isPending ? (
+                <SkeletonRows count={filteredData.length || 8} />
+              ) : (
+                filteredData.map(item => (
+                  <Table.Row key={item.id}>
+                    <Table.RowHeaderCell>{item.class}</Table.RowHeaderCell>
+                    <Table.Cell>{"₹" + item.tuitionFeeMonthly}</Table.Cell>
+                    <Table.Cell>{"₹" + item.transportFeeMonthly}</Table.Cell>
+                    <Table.Cell>{"₹" + item.examFeeYearly}</Table.Cell>
+                    <Table.Cell>{"₹" + item.admissionFee}</Table.Cell>
+                    <Table.Cell>{"₹" + item.idCardFee}</Table.Cell>
+                    <Table.Cell>{"₹" + item.booksFee}</Table.Cell>
+                    <Table.Cell>{"₹" + item.activityFee}</Table.Cell>
+                    <Table.Cell className='flex gap-3 items-center'>
+                      <Button variant='ghost' onClick={() => handleEditOpen(item)}>
+                        <SquarePen size={18} />
+                      </Button>
+                      <Button color="red" variant='ghost' onClick={() => handleDeleteOpen(item)}>
+                        <Trash size={18} />
+                      </Button>
+                    </Table.Cell>
+                  </Table.Row>
+                ))
+              )}
             </Table.Body>
           </Table.Root>
         )}
@@ -184,9 +212,7 @@ const FeeTable = ({ data, academic_years }) => {
       <Dialog.Root open={editOpen} onOpenChange={(val) => { if (!val) handleEditClose(); }}>
         <Dialog.Content size="4">
           <Dialog.Title>Edit Fee Structure</Dialog.Title>
-          <Dialog.Description size="2" mb="4">
-            Make changes to class Fee Structure.
-          </Dialog.Description>
+          <Dialog.Description size="2" mb="4">Make changes to class Fee Structure.</Dialog.Description>
           <Flex direction="column" gap="3">
             <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
               <InputField label="Tuition Monthly Fee" error={errors.tuitionFeeMonthly} required>
