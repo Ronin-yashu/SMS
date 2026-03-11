@@ -20,8 +20,7 @@ const Page = async ({ params }) => {
         <span className='text-gray-600 text-center'>Set up your school&apos;s fee structure to start managing student fees easily.</span>
         <EmptyFeeButton />
         <span className='flex gap-2 text-gray-500 justify-center items-center text-center'>
-          <Zap size={18} className='shrink-0' />
-          Quick setup lets you configure all classes in 2 simple steps
+          Quick setup lets you configure all classes in simple steps
         </span>
       </div>
     )
