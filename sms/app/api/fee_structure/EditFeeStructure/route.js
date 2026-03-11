@@ -14,7 +14,6 @@ export async function PATCH(request) {
             return NextResponse.json({ error: 'Fee structure ID is required' }, { status: 400 });
         }
 
-        // ✅ Whitelist only fee fields — never let client touch id/schoolId/academicYear
         const updatedStructure = await prisma.feeStructure.update({
             where: { id: data.id },
             data: {
