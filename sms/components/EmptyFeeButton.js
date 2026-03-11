@@ -22,7 +22,7 @@ const QuickSetupSchema = z.object({
 const EmptyFeeButton = () => {
     const [isLoading, setIsLoading] = React.useState(false);
     const [open, setOpen] = React.useState(false);
-    const router = useRouter(); 
+    const router = useRouter();
     const {
         register,
         handleSubmit,
@@ -75,14 +75,15 @@ const EmptyFeeButton = () => {
     };
 
     return (
-        <div className='flex items-center justify-center gap-6 mt-8'>
+        // stack vertically on mobile, row on sm+
+        <div className='flex flex-col sm:flex-row items-center justify-center gap-3 mt-8 w-full px-4'>
 
             <Dialog.Root open={open} onOpenChange={(val) => {
                 if (!val) handleClose();
                 else setOpen(true);
             }}>
-                <Dialog.Trigger>
-                    <Button onClick={() => setOpen(true)}>
+                <Dialog.Trigger className='w-full sm:w-auto'>
+                    <Button onClick={() => setOpen(true)} className='w-full sm:w-auto'>
                         <Zap size={18} className='mr-2' />
                         Quick Setup
                     </Button>
@@ -96,7 +97,8 @@ const EmptyFeeButton = () => {
                     </Dialog.Description>
 
                     <Flex direction="column" gap="3">
-                        <div className='flex justify-center items-center gap-6'>
+                        {/* 1 col on mobile, 2 col on sm, 3 col on md+ */}
+                        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
                             <InputField label="Tuition Monthly Fee" error={errors.tuitionFeeMonthly} required>
                                 <input
                                     type="number"
@@ -123,9 +125,7 @@ const EmptyFeeButton = () => {
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                                 />
                             </InputField>
-                        </div>
 
-                        <div className='flex justify-center items-center gap-6'>
                             <InputField label="Admission One-Time Fee" error={errors.admissionFee} required>
                                 <input
                                     type="number"
@@ -152,9 +152,7 @@ const EmptyFeeButton = () => {
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                                 />
                             </InputField>
-                        </div>
 
-                        <div className='flex justify-center items-center gap-6'>
                             <InputField label="Activity Fee" error={errors.activityFee} required>
                                 <input
                                     type="number"
@@ -178,8 +176,8 @@ const EmptyFeeButton = () => {
             </Dialog.Root>
 
             <Dialog.Root>
-                <Dialog.Trigger>
-                    <Button variant='soft'>
+                <Dialog.Trigger className='w-full sm:w-auto'>
+                    <Button variant='soft' className='w-full sm:w-auto'>
                         <Plus size={18} className='mr-2' />
                         Add Manually
                     </Button>
@@ -194,8 +192,8 @@ const EmptyFeeButton = () => {
             </Dialog.Root>
 
             <Dialog.Root>
-                <Dialog.Trigger>
-                    <Button variant='outline'>
+                <Dialog.Trigger className='w-full sm:w-auto'>
+                    <Button variant='outline' className='w-full sm:w-auto'>
                         <FileAxis3d size={18} className='mr-2' />
                         Import from CSV
                     </Button>
