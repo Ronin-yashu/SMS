@@ -13,8 +13,6 @@ export async function PATCH(request) {
         if (!data.id) {
             return NextResponse.json({ error: 'Fee structure ID is required' }, { status: 400 });
         }
-
-        // ✅ Ownership check — only updates if fee structure belongs to the logged-in school
         await prisma.feeStructure.update({
             where: {
                 id: data.id,
