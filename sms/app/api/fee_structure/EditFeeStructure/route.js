@@ -1,18 +1,15 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import User_param from '@/actions/User_param';
+import { withAuth } from '@/lib/withAuth';
 
-export async function PATCH(request) {
+export const PATCH = withAuth(async (request, username) => {
     try {
-        const username = await User_param();
-        if (!username) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
         const data = await request.json();
         if (!data.id) {
             return NextResponse.json({ error: 'Fee structure ID is required' }, { status: 400 });
         }
+
+        // ✅ Ownership check — only updates if fee structure belongs to logged-in school
         await prisma.feeStructure.update({
             where: {
                 id: data.id,
@@ -40,4 +37,4 @@ export async function PATCH(request) {
         console.log(error);
         return NextResponse.json({ error: 'Failed to update fee structure' }, { status: 500 });
     }
-}
+});
