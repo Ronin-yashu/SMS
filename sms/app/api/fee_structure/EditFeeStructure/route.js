@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import Check_fee_structure from '@/actions/Check_fee_structure';
-import User_param from '@/actions/User_param';
 
 export async function PATCH(request) {
     try {
         const data = await request.json();
-        return NextResponse.json({ message: 'PATCH request to edit fee structure hit',data }, { status: 200 });
+        const updatedStructure = await prisma.feeStructure.update({
+            where: {
+                id: data.id,
+            },
+            data: data
+        });
+        console.log('Updated user:', updatedStructure);
+        return NextResponse.json({ message: 'Fee Structure Updated' }, { status: 200 });
 
     } catch (error) {
         console.log(error);
-        return NextResponse.json({ error: 'Failed to set up fee structure' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to update fee structure' }, { status: 500 });
     }
 }
