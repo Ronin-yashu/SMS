@@ -10,10 +10,12 @@ export async function POST(request) {
         if (!username) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+
         const Validating_fee_structure = await Check_fee_structure(username);
-        if (Validating_fee_structure.length > 0) {
+        if (Validating_fee_structure && Validating_fee_structure.length > 0) {
             return NextResponse.json({ error: 'Fee structure already exists for this school' }, { status: 400 });
         }
+
         const school = await prisma.school.findFirst({
             where: {
                 adminEmail: {
@@ -24,15 +26,20 @@ export async function POST(request) {
         if (!school) {
             return NextResponse.json({ error: 'School not found for this user' }, { status: 404 });
         }
+
         const currentYear = new Date().getFullYear();
         const academicYear = `${currentYear}-${currentYear + 1}`;
-        await prisma.feeStructure.createMany({
-            data: Array.from({ length: 12 }, (_, i) => ({
-                class: String(i + 1),
-                academicYear,
-                ...data,
-                schoolId: school.id
-            }))
+
+        // ✅ Wrapped in transaction — if any class fails, ALL 12 are rolled back
+        await prisma.$transaction(async (tx) => {
+            await tx.feeStructure.createMany({
+                data: Array.from({ length: 12 }, (_, i) => ({
+                    class: String(i + 1),
+                    academicYear,
+                    ...data,
+                    schoolId: school.id
+                }))
+            });
         });
 
         return NextResponse.json({ message: 'Fee structure quick setup successful' }, { status: 200 });
