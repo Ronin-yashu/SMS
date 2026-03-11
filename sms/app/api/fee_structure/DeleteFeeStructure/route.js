@@ -9,7 +9,6 @@ export const DELETE = withAuth(async (request, username) => {
             return NextResponse.json({ error: 'Fee structure ID is required' }, { status: 400 });
         }
 
-        // ✅ Ownership check — only deletes if fee structure belongs to logged-in school
         await prisma.feeStructure.delete({
             where: {
                 id: data.id,

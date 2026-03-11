@@ -15,14 +15,13 @@ export const POST = withSchool(async (request, username, school) => {
         const currentYear = new Date().getFullYear();
         const academicYear = `${currentYear}-${currentYear + 1}`;
 
-        // ✅ Transaction — all 12 classes or none
         await prisma.$transaction(async (tx) => {
             await tx.feeStructure.createMany({
                 data: Array.from({ length: 12 }, (_, i) => ({
                     class: String(i + 1),
                     academicYear,
                     ...data,
-                    schoolId: school.id  // school injected by withSchool — no extra DB query
+                    schoolId: school.id 
                 }))
             });
         });
