@@ -1,12 +1,80 @@
 "use client"
 import React from 'react'
-import { Select, Button, Table } from '@radix-ui/themes'
-import { Zap, Plus, FileAxis3d } from 'lucide-react'
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import toast from 'react-hot-toast';
+import InputField from '@/components/InputField';
+import { useRouter } from 'next/navigation';
+import { Select, Button, Table, Dialog, Flex, Text, TextField, AlertDialog } from '@radix-ui/themes'
+import { Zap, Plus, FileAxis3d, SquarePen, Trash } from 'lucide-react'
+
+const EditFeeStructure = z.object({
+  tuitionFeeMonthly: z.number({ invalid_type_error: 'Tuition fee is required' }).int().positive({ message: 'Must be a positive number' }),
+  transportFeeMonthly: z.number({ invalid_type_error: 'Transport fee is required' }).int().positive({ message: 'Must be a positive number' }),
+  examFeeYearly: z.number({ invalid_type_error: 'Exam yearly fee is required' }).int().positive({ message: 'Must be a positive number' }),
+  admissionFee: z.number({ invalid_type_error: 'Admission fee is required' }).int().positive({ message: 'Must be a positive number' }),
+  booksFee: z.number({ invalid_type_error: 'Book fee is required' }).int().positive({ message: 'Must be a positive number' }),
+  idCardFee: z.number({ invalid_type_error: 'ID card fee is required' }).int().positive({ message: 'Must be a positive number' }),
+  activityFee: z.number({ invalid_type_error: 'Activity fee is required' }).int().positive({ message: 'Must be a positive number' }),
+});
 
 const FeeTable = ({ data, academic_years }) => {
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
   const [selectedYear, setSelectedYear] = React.useState(academic_years?.[0] || '');
-
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm({
+    resolver: zodResolver(EditFeeStructure),
+    mode: 'onSubmit',
+    defaultValues: {
+      tuitionFeeMonthly: '',
+      transportFeeMonthly: '',
+      examFeeYearly: '',
+      admissionFee: '',
+      booksFee: '',
+      idCardFee: '',
+      activityFee: '',
+    }
+  });
   const filteredData = data.filter(item => item.academicYear === selectedYear);
+  const router = useRouter();
+
+  const handleClose = () => {
+    reset();
+    setOpen(false);
+  };
+
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+
+    const promise = fetch("/api/fee_structure/EditFeeStructure", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }).then(async (res) => {
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Process Intreputed');
+      return result;
+    });
+
+    toast.promise(promise, {
+      loading: 'Editing fee structure...',
+      success: 'Process completed successfully!',
+      error: (err) => `Error: ${err.message}`,
+    }).then(() => {
+      handleClose();
+      router.refresh();
+    }).catch(() => {
+      // keep dialog open
+    }).finally(() => {
+      setIsLoading(false);
+    });
+  };
 
   return (
     <div className='flex flex-col w-full h-full p-3 sm:p-6 space-y-4 sm:space-y-6'>
@@ -59,6 +127,7 @@ const FeeTable = ({ data, academic_years }) => {
                 <Table.ColumnHeaderCell>Id Card</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell>Books</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell>Activity</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
@@ -72,6 +141,132 @@ const FeeTable = ({ data, academic_years }) => {
                   <Table.Cell>{"₹" + item.idCardFee}</Table.Cell>
                   <Table.Cell>{"₹" + item.booksFee}</Table.Cell>
                   <Table.Cell>{"₹" + item.activityFee}</Table.Cell>
+                  <Table.Cell className='gap-4 flex justify-start items-center'>
+
+                    <Dialog.Root open={open} onOpenChange={(val) => {
+                      if (!val) handleClose();
+                      else setOpen(true);
+                    }}>
+                      <Dialog.Trigger>
+                        <Button variant='ghost' onClick={() => setOpen(true)}>
+                          <SquarePen size={18} />
+                        </Button>
+                      </Dialog.Trigger>
+
+                      <Dialog.Content size={4}>
+                        <Dialog.Title>Edit Fee Structure</Dialog.Title>
+                        <Dialog.Description size="2" mb="4">
+                          Make changes to class Fee Structure.
+                        </Dialog.Description>
+
+                        <Flex direction="column" gap="3">
+                          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
+                            <InputField label="Tuition Monthly Fee" error={errors.tuitionFeeMonthly} required>
+                              <input
+                                type="number"
+                                {...register("tuitionFeeMonthly", { valueAsNumber: true })}
+                                placeholder="Enter tuition monthly fee"
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                              />
+                            </InputField>
+
+                            <InputField label="Transport Monthly Fee" error={errors.transportFeeMonthly} required>
+                              <input
+                                type="number"
+                                {...register("transportFeeMonthly", { valueAsNumber: true })}
+                                placeholder="Enter transport monthly fee"
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                              />
+                            </InputField>
+
+                            <InputField label="Exam Yearly Fee" error={errors.examFeeYearly} required>
+                              <input
+                                type="number"
+                                {...register("examFeeYearly", { valueAsNumber: true })}
+                                placeholder="Enter exam yearly fee"
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                              />
+                            </InputField>
+
+                            <InputField label="Admission One-Time Fee" error={errors.admissionFee} required>
+                              <input
+                                type="number"
+                                {...register("admissionFee", { valueAsNumber: true })}
+                                placeholder="Enter admission one-time fee"
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                              />
+                            </InputField>
+
+                            <InputField label="Book Fee" error={errors.booksFee} required>
+                              <input
+                                type="number"
+                                {...register("booksFee", { valueAsNumber: true })}
+                                placeholder="Enter book fee"
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                              />
+                            </InputField>
+
+                            <InputField label="ID Card Fee" error={errors.idCardFee} required>
+                              <input
+                                type="number"
+                                {...register("idCardFee", { valueAsNumber: true })}
+                                placeholder="Enter ID card fee"
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                              />
+                            </InputField>
+
+                            <InputField label="Activity Fee" error={errors.activityFee} required>
+                              <input
+                                type="number"
+                                {...register("activityFee", { valueAsNumber: true })}
+                                placeholder="Enter activity fee"
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                              />
+                            </InputField>
+                          </div>
+                        </Flex>
+
+                        <Flex gap="3" mt="4" justify="end">
+                          <Button variant="soft" color="gray" disabled={isLoading} onClick={handleClose}>
+                            Cancel
+                          </Button>
+                          <Button onClick={handleSubmit(onSubmit)} disabled={isLoading} loading={isLoading}>
+                            Save
+                          </Button>
+                        </Flex>
+
+                      </Dialog.Content>
+                    </Dialog.Root>
+
+                    <AlertDialog.Root >
+                      <AlertDialog.Trigger >
+                        <Button color="red" variant='ghost'>
+                          <Trash size={18} />
+                        </Button>
+                      </AlertDialog.Trigger>
+                      <AlertDialog.Content maxWidth="450px">
+                        <AlertDialog.Title>Delete this class Fee Structure ? </AlertDialog.Title>
+                        <AlertDialog.Description size="2">
+                          Are you sure? This application will no longer be accessible and any
+                          existing sessions will be expired.
+                        </AlertDialog.Description>
+
+                        <Flex gap="3" mt="4" justify="end">
+                          <AlertDialog.Cancel>
+                            <Button variant="soft" color="gray">
+                              Cancel
+                            </Button>
+                          </AlertDialog.Cancel>
+                          <AlertDialog.Action>
+                            <Button variant="solid" color="red">
+                              Delete
+                            </Button>
+                          </AlertDialog.Action>
+                        </Flex>
+                      </AlertDialog.Content>
+                    </AlertDialog.Root>
+
+                  </Table.Cell>
                 </Table.Row>
               ))}
             </Table.Body>
