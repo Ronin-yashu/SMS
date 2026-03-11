@@ -6,6 +6,8 @@ import { Zap, Plus, FileAxis3d } from 'lucide-react'
 const FeeTable = ({ data, academic_years }) => {
   const [selectedYear, setSelectedYear] = React.useState(academic_years?.[0] || '');
 
+  const filteredData = data.filter(item => item.academicYear === selectedYear);
+
   return (
     <div className='flex flex-col w-full h-full p-3 sm:p-6 space-y-4 sm:space-y-6'>
 
@@ -40,34 +42,41 @@ const FeeTable = ({ data, academic_years }) => {
       </header>
 
       <div className='w-full overflow-x-auto rounded-xl'>
-        <Table.Root>
-          <Table.Header>
-            <Table.Row>
-              <Table.ColumnHeaderCell>Class</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Tuition/mo</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Transport/mo</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Exam/yr</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Admission</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Id Card</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Books</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Activity</Table.ColumnHeaderCell>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {data.map(item => (
-              <Table.Row key={item.id}>
-                <Table.RowHeaderCell>{item.class}</Table.RowHeaderCell>
-                <Table.Cell>{"₹" + item.tuitionFeeMonthly}</Table.Cell>
-                <Table.Cell>{"₹" + item.transportFeeMonthly}</Table.Cell>
-                <Table.Cell>{"₹" + item.examFeeYearly}</Table.Cell>
-                <Table.Cell>{"₹" + item.admissionFee}</Table.Cell>
-                <Table.Cell>{"₹" + item.idCardFee}</Table.Cell>
-                <Table.Cell>{"₹" + item.booksFee}</Table.Cell>
-                <Table.Cell>{"₹" + item.activityFee}</Table.Cell>
+        {filteredData.length === 0 ? (
+          <div className='flex flex-col items-center justify-center py-16 text-gray-400 gap-2'>
+            <span className='text-4xl'>🚫</span>
+            <span className='text-sm'>No fee structure found for {selectedYear}</span>
+          </div>
+        ) : (
+          <Table.Root>
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeaderCell>Class</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Tuition/mo</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Transport/mo</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Exam/yr</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Admission</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Id Card</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Books</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Activity</Table.ColumnHeaderCell>
               </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Root>
+            </Table.Header>
+            <Table.Body>
+              {filteredData.map(item => (
+                <Table.Row key={item.id}>
+                  <Table.RowHeaderCell>{item.class}</Table.RowHeaderCell>
+                  <Table.Cell>{"₹" + item.tuitionFeeMonthly}</Table.Cell>
+                  <Table.Cell>{"₹" + item.transportFeeMonthly}</Table.Cell>
+                  <Table.Cell>{"₹" + item.examFeeYearly}</Table.Cell>
+                  <Table.Cell>{"₹" + item.admissionFee}</Table.Cell>
+                  <Table.Cell>{"₹" + item.idCardFee}</Table.Cell>
+                  <Table.Cell>{"₹" + item.booksFee}</Table.Cell>
+                  <Table.Cell>{"₹" + item.activityFee}</Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table.Root>
+        )}
       </div>
 
     </div>
