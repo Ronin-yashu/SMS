@@ -15,7 +15,6 @@ export default async function Check_fee_structure(username) {
         const feeStructure = await prisma.feeStructure.findMany({
             where: { schoolId: school.id },
             orderBy: { academicYear: 'desc' },
-            cacheStrategy: { ttl: 60, swr: 30 } 
         })
         if (!feeStructure) return null
         return feeStructure
