@@ -1,18 +1,15 @@
 "use server"
 import { prisma } from '@/lib/prisma';
+
 export default async function GetAcademicYears(username) {
     try {
-        const school = await prisma.school.findFirst({
-            where: {
-                adminEmail: {
-                    startsWith: `${username}@`
-                }
-            }
-        });
-        if (!school) return null;
-
+        // ✅ Single query — no separate school lookup needed
         const academicYears = await prisma.feeStructure.findMany({
-            where: { schoolId: school.id },
+            where: {
+                school: {
+                    adminEmail: { startsWith: `${username}@` }
+                }
+            },
             select: { academicYear: true },
             distinct: ['academicYear'],
             orderBy: { academicYear: 'desc' }
