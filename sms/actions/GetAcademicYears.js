@@ -15,7 +15,8 @@ export default async function GetAcademicYears(username) {
             where: { schoolId: school.id },
             select: { academicYear: true },
             distinct: ['academicYear'],
-            orderBy: { academicYear: 'desc' }
+            orderBy: { academicYear: 'desc' },
+            cacheStrategy: { ttl: 300 }
         });
 
         if (!academicYears || academicYears.length === 0) return null;

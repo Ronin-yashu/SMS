@@ -29,8 +29,6 @@ export async function POST(request) {
 
         const currentYear = new Date().getFullYear();
         const academicYear = `${currentYear}-${currentYear + 1}`;
-
-        // ✅ Wrapped in transaction — if any class fails, ALL 12 are rolled back
         await prisma.$transaction(async (tx) => {
             await tx.feeStructure.createMany({
                 data: Array.from({ length: 12 }, (_, i) => ({
