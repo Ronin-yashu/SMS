@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma';
 
 export default async function GetAcademicYears(username) {
     try {
-        // ✅ Single query — no separate school lookup needed
         const academicYears = await prisma.feeStructure.findMany({
             where: {
                 school: {
