@@ -111,7 +111,27 @@ const FeeTable = ({ data, academic_years }) => {
     }).then(() => {
       handleEditClose();
       refreshData();
-    }).catch(() => {}).finally(() => setIsLoading(false));
+    }).catch(() => { }).finally(() => setIsLoading(false));
+  };
+
+  const Add_fee_structure = async (data) => {
+    const promise = fetch("/api/fee_structure/AddFeeStructure", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }).then(async (res) => {
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Process failed');
+      return result;
+    });
+
+    toast.promise(promise, {
+      loading: 'Adding...',
+      success: 'Fee Structure Added Successfully!',
+      error: (err) => `Error: ${err.message}`,
+    }).then(() => {
+      refreshData();
+    }).catch(() => { });
   };
 
   const onDelete = async () => {
@@ -133,7 +153,7 @@ const FeeTable = ({ data, academic_years }) => {
       setDeleteOpen(false);
       setSelectedItem(null);
       refreshData();
-    }).catch(() => {});
+    }).catch(() => { });
   };
 
   return (
@@ -154,7 +174,7 @@ const FeeTable = ({ data, academic_years }) => {
         <div className='flex flex-wrap gap-2'>
           <Button variant='soft' size="2"><FileAxis3d size={16} /><span className='ml-1'>Copy Year</span></Button>
           <Button variant='outline' size="2"><Zap size={16} /><span className='ml-1'>Quick Setup</span></Button>
-          <Button size="2"><Plus size={16} /><span className='ml-1'>Add Fee Structure</span></Button>
+          <Button onClick={()=>{Add_fee_structure(data)}} size="2"><Plus size={16} /><span className='ml-1'>Add Fee Structure</span></Button>
         </div>
       </header>
 
