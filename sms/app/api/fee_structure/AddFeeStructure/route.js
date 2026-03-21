@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withSchool } from '@/lib/withAuth';
 
-export const POST = withSchool(async (request, username) => {
+export const POST = withSchool(async (request,school) => {
     try {
         const data = await request.json();
         await prisma.feeStructure.create({
-            data: data
+            data: {...data,school.id}
         });
         return NextResponse.json({ message: 'Fee Structure Added' }, { status: 200 });
 

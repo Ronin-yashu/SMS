@@ -21,7 +21,7 @@ const EditFeeStructureSchema = z.object({
 });
 
 const AddFeeStructureSchema = z.object({
-  classValue: z.string().min(1, 'Class is required'),
+  class: z.string().min(1, 'Class is required'),
   academicYear: z.string().min(1, 'Academic year is required'),
   tuitionFeeMonthly: z.number({ invalid_type_error: 'Tuition fee is required' }).int().positive(),
   transportFeeMonthly: z.number({ invalid_type_error: 'Transport fee is required' }).int().positive(),
@@ -88,7 +88,7 @@ const FeeTable = ({ data, academic_years }) => {
     resolver: zodResolver(AddFeeStructureSchema),
     mode: 'onSubmit',
     defaultValues: {
-      classValue: '',
+      class: '',
       academicYear: defaultAcademicYear,
       tuitionFeeMonthly: '',
       transportFeeMonthly: '',
@@ -281,9 +281,9 @@ const FeeTable = ({ data, academic_years }) => {
           <Flex direction="column" gap="3">
             <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
 
-              <InputField label="Class" error={addErrors.classValue} required>
+              <InputField label="Class" error={addErrors.class} required>
                 <Controller
-                  name="classValue"
+                  name="class"
                   control={addControl}
                   render={({ field }) => (
                     <Select.Root size="3" value={field.value} onValueChange={field.onChange}>
