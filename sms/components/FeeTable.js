@@ -1,7 +1,7 @@
 "use client"
 import React from 'react'
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import InputField from '@/components/InputField';
@@ -10,7 +10,7 @@ import { useTransition } from 'react';
 import { Select, Button, Table, Dialog, Flex, AlertDialog, Skeleton } from '@radix-ui/themes'
 import { Zap, Plus, FileAxis3d, SquarePen, Trash } from 'lucide-react'
 
-const EditFeeStructure = z.object({
+const EditFeeStructureSchema = z.object({
   tuitionFeeMonthly: z.number({ invalid_type_error: 'Tuition fee is required' }).int().positive(),
   transportFeeMonthly: z.number({ invalid_type_error: 'Transport fee is required' }).int().positive(),
   examFeeYearly: z.number({ invalid_type_error: 'Exam yearly fee is required' }).int().positive(),
@@ -20,9 +20,9 @@ const EditFeeStructure = z.object({
   activityFee: z.number({ invalid_type_error: 'Activity fee is required' }).int().positive(),
 });
 
-const AddFeeStructure = z.object({
-  class: z.string({ invalid_type_error: 'Class is required' }),
-  academicYear: z.string({ invalid_type_error: 'Tuition fee is required' }),
+const AddFeeStructureSchema = z.object({
+  classValue: z.string().min(1, 'Class is required'),
+  academicYear: z.string().min(1, 'Academic year is required'),
   tuitionFeeMonthly: z.number({ invalid_type_error: 'Tuition fee is required' }).int().positive(),
   transportFeeMonthly: z.number({ invalid_type_error: 'Transport fee is required' }).int().positive(),
   examFeeYearly: z.number({ invalid_type_error: 'Exam yearly fee is required' }).int().positive(),
@@ -31,6 +31,9 @@ const AddFeeStructure = z.object({
   idCardFee: z.number({ invalid_type_error: 'ID card fee is required' }).int().positive(),
   activityFee: z.number({ invalid_type_error: 'Activity fee is required' }).int().positive(),
 });
+
+const currentYear = new Date().getFullYear();
+const defaultAcademicYear = `${currentYear}-${currentYear + 1}`;
 
 const SkeletonRows = ({ count = 8 }) => (
   <>
@@ -48,7 +51,7 @@ const SkeletonRows = ({ count = 8 }) => (
 
 const FeeTable = ({ data, academic_years }) => {
   const [isLoading, setIsLoading] = React.useState(false);
-  const [addOpen, setaddOpen] = React.useState(false);
+  const [addOpen, setAddOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [selectedItem, setSelectedItem] = React.useState(null);
@@ -56,8 +59,13 @@ const FeeTable = ({ data, academic_years }) => {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({
-    resolver: zodResolver(EditFeeStructure),
+  const {
+    register: editRegister,
+    handleSubmit: editHandleSubmit,
+    formState: { errors: editErrors },
+    reset: editReset,
+  } = useForm({
+    resolver: zodResolver(EditFeeStructureSchema),
     mode: 'onSubmit',
     defaultValues: {
       tuitionFeeMonthly: '',
@@ -70,14 +78,41 @@ const FeeTable = ({ data, academic_years }) => {
     }
   });
 
+  const {
+    register: addRegister,
+    handleSubmit: addHandleSubmit,
+    formState: { errors: addErrors },
+    reset: addReset,
+    control: addControl,
+  } = useForm({
+    resolver: zodResolver(AddFeeStructureSchema),
+    mode: 'onSubmit',
+    defaultValues: {
+      classValue: '',
+      academicYear: defaultAcademicYear,
+      tuitionFeeMonthly: '',
+      transportFeeMonthly: '',
+      examFeeYearly: '',
+      admissionFee: '',
+      booksFee: '',
+      idCardFee: '',
+      activityFee: '',
+    }
+  });
 
   const filteredData = data
     .filter(item => item.academicYear === selectedYear)
     .sort((a, b) => parseInt(a.class) - parseInt(b.class));
 
+  const refreshData = () => {
+    startTransition(() => {
+      router.refresh();
+    });
+  };
+
   const handleEditOpen = (item) => {
     setSelectedItem(item);
-    reset({
+    editReset({
       tuitionFeeMonthly: item.tuitionFeeMonthly,
       transportFeeMonthly: item.transportFeeMonthly,
       examFeeYearly: item.examFeeYearly,
@@ -90,23 +125,12 @@ const FeeTable = ({ data, academic_years }) => {
   };
 
   const handleEditClose = () => {
-    reset();
+    editReset();
     setSelectedItem(null);
     setEditOpen(false);
   };
 
-  const handleDeleteOpen = (item) => {
-    setSelectedItem(item);
-    setDeleteOpen(true);
-  };
-
-  const refreshData = () => {
-    startTransition(() => {
-      router.refresh();
-    });
-  };
-
-  const onSubmit = async (formData) => {
+  const onEdit = async (formData) => {
     setIsLoading(true);
     const promise = fetch("/api/fee_structure/EditFeeStructure", {
       method: "PATCH",
@@ -128,12 +152,17 @@ const FeeTable = ({ data, academic_years }) => {
     }).catch(() => { }).finally(() => setIsLoading(false));
   };
 
-  const Add_fee_structure = async (data) => {
+  const handleAddClose = () => {
+    addReset();
+    setAddOpen(false);
+  };
+
+  const onAdd = async (formData) => {
     setIsLoading(true);
     const promise = fetch("/api/fee_structure/AddFeeStructure", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(formData),
     }).then(async (res) => {
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Process failed');
@@ -141,11 +170,11 @@ const FeeTable = ({ data, academic_years }) => {
     });
 
     toast.promise(promise, {
-      loading: 'Adding...',
+      loading: 'Adding fee structure...',
       success: 'Fee Structure Added Successfully!',
       error: (err) => `Error: ${err.message}`,
     }).then(() => {
-      // handleEditClose();
+      handleAddClose();
       refreshData();
     }).catch(() => { }).finally(() => setIsLoading(false));
   };
@@ -190,7 +219,7 @@ const FeeTable = ({ data, academic_years }) => {
         <div className='flex flex-wrap gap-2'>
           <Button variant='soft' size="2"><FileAxis3d size={16} /><span className='ml-1'>Copy Year</span></Button>
           <Button variant='outline' size="2"><Zap size={16} /><span className='ml-1'>Quick Setup</span></Button>
-          <Button onClick={() => Add_fee_structure(data) } size="2"><Plus size={16} /><span className='ml-1'>Add Fee Structure</span></Button>
+          <Button onClick={() => setAddOpen(true)} size="2"><Plus size={16} /><span className='ml-1'>Add Manually</span></Button>
         </div>
       </header>
 
@@ -233,7 +262,7 @@ const FeeTable = ({ data, academic_years }) => {
                       <Button variant='ghost' onClick={() => handleEditOpen(item)}>
                         <SquarePen size={18} />
                       </Button>
-                      <Button color="red" variant='ghost' onClick={() => handleDeleteOpen(item)}>
+                      <Button color="red" variant='ghost' onClick={() => { setSelectedItem(item); setDeleteOpen(true); }}>
                         <Trash size={18} />
                       </Button>
                     </Table.Cell>
@@ -245,38 +274,111 @@ const FeeTable = ({ data, academic_years }) => {
         )}
       </div>
 
+      <Dialog.Root open={addOpen} onOpenChange={(val) => { if (!val) handleAddClose(); }}>
+        <Dialog.Content size="4">
+          <Dialog.Title>Add Fee Structure</Dialog.Title>
+          <Dialog.Description size="2" mb="4">Add fee structure for a specific class and academic year.</Dialog.Description>
+          <Flex direction="column" gap="3">
+            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
+
+              <InputField label="Class" error={addErrors.classValue} required>
+                <Controller
+                  name="classValue"
+                  control={addControl}
+                  render={({ field }) => (
+                    <Select.Root size="3" value={field.value} onValueChange={field.onChange}>
+                      <Select.Trigger className="w-full" placeholder="Select class" />
+                      <Select.Content>
+                        <Select.Group>
+                          <Select.Label>Select Class</Select.Label>
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <Select.Item key={i + 1} value={String(i + 1)}>Class {i + 1}</Select.Item>
+                          ))}
+                        </Select.Group>
+                      </Select.Content>
+                    </Select.Root>
+                  )}
+                />
+              </InputField>
+
+              <InputField label="Academic Year" error={addErrors.academicYear} required>
+                <input
+                  type="text"
+                  {...addRegister("academicYear")}
+                  placeholder="e.g. 2026-2027"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                />
+              </InputField>
+
+              <InputField label="Tuition Monthly Fee" error={addErrors.tuitionFeeMonthly} required>
+                <input type="number" {...addRegister("tuitionFeeMonthly", { valueAsNumber: true })} placeholder="Enter tuition monthly fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+              <InputField label="Transport Monthly Fee" error={addErrors.transportFeeMonthly} required>
+                <input type="number" {...addRegister("transportFeeMonthly", { valueAsNumber: true })} placeholder="Enter transport monthly fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+              <InputField label="Exam Yearly Fee" error={addErrors.examFeeYearly} required>
+                <input type="number" {...addRegister("examFeeYearly", { valueAsNumber: true })} placeholder="Enter exam yearly fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+              <InputField label="Admission One-Time Fee" error={addErrors.admissionFee} required>
+                <input type="number" {...addRegister("admissionFee", { valueAsNumber: true })} placeholder="Enter admission one-time fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+              <InputField label="Book Fee" error={addErrors.booksFee} required>
+                <input type="number" {...addRegister("booksFee", { valueAsNumber: true })} placeholder="Enter book fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+              <InputField label="ID Card Fee" error={addErrors.idCardFee} required>
+                <input type="number" {...addRegister("idCardFee", { valueAsNumber: true })} placeholder="Enter ID card fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+              <InputField label="Activity Fee" error={addErrors.activityFee} required>
+                <input type="number" {...addRegister("activityFee", { valueAsNumber: true })} placeholder="Enter activity fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+            </div>
+          </Flex>
+          <Flex gap="3" mt="4" justify="end">
+            <Button variant="soft" color="gray" disabled={isLoading} onClick={handleAddClose}>Cancel</Button>
+            <Button onClick={addHandleSubmit(onAdd)} disabled={isLoading} loading={isLoading}>Add</Button>
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
+
       <Dialog.Root open={editOpen} onOpenChange={(val) => { if (!val) handleEditClose(); }}>
         <Dialog.Content size="4">
           <Dialog.Title>Edit Fee Structure</Dialog.Title>
           <Dialog.Description size="2" mb="4">Make changes to class Fee Structure.</Dialog.Description>
           <Flex direction="column" gap="3">
             <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
-              <InputField label="Tuition Monthly Fee" error={errors.tuitionFeeMonthly} required>
-                <input type="number" {...register("tuitionFeeMonthly", { valueAsNumber: true })} placeholder="Enter tuition monthly fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              <InputField label="Tuition Monthly Fee" error={editErrors.tuitionFeeMonthly} required>
+                <input type="number" {...editRegister("tuitionFeeMonthly", { valueAsNumber: true })} placeholder="Enter tuition monthly fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
               </InputField>
-              <InputField label="Transport Monthly Fee" error={errors.transportFeeMonthly} required>
-                <input type="number" {...register("transportFeeMonthly", { valueAsNumber: true })} placeholder="Enter transport monthly fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              <InputField label="Transport Monthly Fee" error={editErrors.transportFeeMonthly} required>
+                <input type="number" {...editRegister("transportFeeMonthly", { valueAsNumber: true })} placeholder="Enter transport monthly fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
               </InputField>
-              <InputField label="Exam Yearly Fee" error={errors.examFeeYearly} required>
-                <input type="number" {...register("examFeeYearly", { valueAsNumber: true })} placeholder="Enter exam yearly fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              <InputField label="Exam Yearly Fee" error={editErrors.examFeeYearly} required>
+                <input type="number" {...editRegister("examFeeYearly", { valueAsNumber: true })} placeholder="Enter exam yearly fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
               </InputField>
-              <InputField label="Admission One-Time Fee" error={errors.admissionFee} required>
-                <input type="number" {...register("admissionFee", { valueAsNumber: true })} placeholder="Enter admission one-time fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              <InputField label="Admission One-Time Fee" error={editErrors.admissionFee} required>
+                <input type="number" {...editRegister("admissionFee", { valueAsNumber: true })} placeholder="Enter admission one-time fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
               </InputField>
-              <InputField label="Book Fee" error={errors.booksFee} required>
-                <input type="number" {...register("booksFee", { valueAsNumber: true })} placeholder="Enter book fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              <InputField label="Book Fee" error={editErrors.booksFee} required>
+                <input type="number" {...editRegister("booksFee", { valueAsNumber: true })} placeholder="Enter book fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
               </InputField>
-              <InputField label="ID Card Fee" error={errors.idCardFee} required>
-                <input type="number" {...register("idCardFee", { valueAsNumber: true })} placeholder="Enter ID card fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              <InputField label="ID Card Fee" error={editErrors.idCardFee} required>
+                <input type="number" {...editRegister("idCardFee", { valueAsNumber: true })} placeholder="Enter ID card fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
               </InputField>
-              <InputField label="Activity Fee" error={errors.activityFee} required>
-                <input type="number" {...register("activityFee", { valueAsNumber: true })} placeholder="Enter activity fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              <InputField label="Activity Fee" error={editErrors.activityFee} required>
+                <input type="number" {...editRegister("activityFee", { valueAsNumber: true })} placeholder="Enter activity fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
               </InputField>
             </div>
           </Flex>
           <Flex gap="3" mt="4" justify="end">
             <Button variant="soft" color="gray" disabled={isLoading} onClick={handleEditClose}>Cancel</Button>
-            <Button onClick={handleSubmit(onSubmit)} disabled={isLoading} loading={isLoading}>Save</Button>
+            <Button onClick={editHandleSubmit(onEdit)} disabled={isLoading} loading={isLoading}>Save</Button>
           </Flex>
         </Dialog.Content>
       </Dialog.Root>
