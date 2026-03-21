@@ -20,6 +20,18 @@ const EditFeeStructure = z.object({
   activityFee: z.number({ invalid_type_error: 'Activity fee is required' }).int().positive(),
 });
 
+const AddFeeStructure = z.object({
+  class: z.string({ invalid_type_error: 'Class is required' }),
+  academicYear: z.string({ invalid_type_error: 'Tuition fee is required' }),
+  tuitionFeeMonthly: z.number({ invalid_type_error: 'Tuition fee is required' }).int().positive(),
+  transportFeeMonthly: z.number({ invalid_type_error: 'Transport fee is required' }).int().positive(),
+  examFeeYearly: z.number({ invalid_type_error: 'Exam yearly fee is required' }).int().positive(),
+  admissionFee: z.number({ invalid_type_error: 'Admission fee is required' }).int().positive(),
+  booksFee: z.number({ invalid_type_error: 'Book fee is required' }).int().positive(),
+  idCardFee: z.number({ invalid_type_error: 'ID card fee is required' }).int().positive(),
+  activityFee: z.number({ invalid_type_error: 'Activity fee is required' }).int().positive(),
+});
+
 const SkeletonRows = ({ count = 8 }) => (
   <>
     {Array.from({ length: count }).map((_, i) => (
@@ -36,6 +48,7 @@ const SkeletonRows = ({ count = 8 }) => (
 
 const FeeTable = ({ data, academic_years }) => {
   const [isLoading, setIsLoading] = React.useState(false);
+  const [addOpen, setaddOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [selectedItem, setSelectedItem] = React.useState(null);
@@ -56,6 +69,7 @@ const FeeTable = ({ data, academic_years }) => {
       activityFee: '',
     }
   });
+
 
   const filteredData = data
     .filter(item => item.academicYear === selectedYear)
@@ -115,6 +129,7 @@ const FeeTable = ({ data, academic_years }) => {
   };
 
   const Add_fee_structure = async (data) => {
+    setIsLoading(true);
     const promise = fetch("/api/fee_structure/AddFeeStructure", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -130,8 +145,9 @@ const FeeTable = ({ data, academic_years }) => {
       success: 'Fee Structure Added Successfully!',
       error: (err) => `Error: ${err.message}`,
     }).then(() => {
+      // handleEditClose();
       refreshData();
-    }).catch(() => { });
+    }).catch(() => { }).finally(() => setIsLoading(false));
   };
 
   const onDelete = async () => {
@@ -174,7 +190,7 @@ const FeeTable = ({ data, academic_years }) => {
         <div className='flex flex-wrap gap-2'>
           <Button variant='soft' size="2"><FileAxis3d size={16} /><span className='ml-1'>Copy Year</span></Button>
           <Button variant='outline' size="2"><Zap size={16} /><span className='ml-1'>Quick Setup</span></Button>
-          <Button onClick={()=>{Add_fee_structure(data)}} size="2"><Plus size={16} /><span className='ml-1'>Add Fee Structure</span></Button>
+          <Button onClick={() => Add_fee_structure(data) } size="2"><Plus size={16} /><span className='ml-1'>Add Fee Structure</span></Button>
         </div>
       </header>
 
