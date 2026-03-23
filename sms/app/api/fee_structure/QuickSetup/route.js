@@ -5,6 +5,7 @@ import { withSchool } from '@/lib/withAuth';
 export const POST = withSchool(async (request, username, school) => {
     try {
         const data = await request.json();
+
         const currentYear = new Date().getFullYear();
         const academicYear = data.academicYear || `${currentYear}-${currentYear + 1}`;
         const mode = data.mode || 'skip';
@@ -13,26 +14,30 @@ export const POST = withSchool(async (request, username, school) => {
 
         if (mode === 'override') {
             await prisma.$transaction(async (tx) => {
-                for (let i = 1; i <= 12; i++) {
-                    await tx.feeStructure.upsert({
-                        where: {
-                            schoolId_class_academicYear: {
-                                schoolId: school.id,
-                                class: String(i),
-                                academicYear,
-                            }
-                        },
-                        update: { ...feeData },
-                        create: {
-                            class: String(i),
-                            academicYear,
-                            ...feeData,
-                            schoolId: school.id,
-                        }
-                    });
-                }
+
+                // Update all existing classes for this year
+                await tx.feeStructure.updateMany({
+                    where: {
+                        schoolId: school.id,
+                        academicYear,
+                    },
+                    data: { ...feeData }
+                });
+
+                // Create missing ones, skip already existing
+                await tx.feeStructure.createMany({
+                    data: Array.from({ length: 12 }, (_, i) => ({
+                        class: String(i + 1),
+                        academicYear,
+                        ...feeData,
+                        schoolId: school.id,
+                    })),
+                    skipDuplicates: true,
+                });
+
             });
         } else {
+            // skip mode — just create missing ones
             await prisma.$transaction(async (tx) => {
                 await tx.feeStructure.createMany({
                     data: Array.from({ length: 12 }, (_, i) => ({
