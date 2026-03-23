@@ -7,8 +7,8 @@ import toast from 'react-hot-toast';
 import InputField from '@/components/InputField';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
-import { Select, Button, Table, Dialog, Flex, AlertDialog, Skeleton } from '@radix-ui/themes'
-import { Zap, Plus, FileAxis3d, SquarePen, Trash } from 'lucide-react'
+import { Select, Button, Table, Dialog, Flex, AlertDialog, Skeleton, Callout } from '@radix-ui/themes'
+import { Zap, Plus, FileAxis3d, SquarePen, Trash, Info } from 'lucide-react'
 
 const EditFeeStructureSchema = z.object({
   tuitionFeeMonthly: z.number({ invalid_type_error: 'Tuition fee is required' }).int().positive(),
@@ -22,6 +22,17 @@ const EditFeeStructureSchema = z.object({
 
 const AddFeeStructureSchema = z.object({
   class: z.string().min(1, 'Class is required'),
+  academicYear: z.string().min(1, 'Academic year is required'),
+  tuitionFeeMonthly: z.number({ invalid_type_error: 'Tuition fee is required' }).int().positive(),
+  transportFeeMonthly: z.number({ invalid_type_error: 'Transport fee is required' }).int().positive(),
+  examFeeYearly: z.number({ invalid_type_error: 'Exam yearly fee is required' }).int().positive(),
+  admissionFee: z.number({ invalid_type_error: 'Admission fee is required' }).int().positive(),
+  booksFee: z.number({ invalid_type_error: 'Book fee is required' }).int().positive(),
+  idCardFee: z.number({ invalid_type_error: 'ID card fee is required' }).int().positive(),
+  activityFee: z.number({ invalid_type_error: 'Activity fee is required' }).int().positive(),
+});
+
+const QuickSetupSchema = z.object({
   academicYear: z.string().min(1, 'Academic year is required'),
   tuitionFeeMonthly: z.number({ invalid_type_error: 'Tuition fee is required' }).int().positive(),
   transportFeeMonthly: z.number({ invalid_type_error: 'Transport fee is required' }).int().positive(),
@@ -54,11 +65,16 @@ const FeeTable = ({ data, academic_years }) => {
   const [addOpen, setAddOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [quickSetupOpen, setQuickSetupOpen] = React.useState(false);
+  const [conflictOpen, setConflictOpen] = React.useState(false);
+  const [conflictData, setConflictData] = React.useState({ existingClasses: [], missingClasses: [] });
+  const [pendingFormData, setPendingFormData] = React.useState(null);
   const [selectedItem, setSelectedItem] = React.useState(null);
   const [selectedYear, setSelectedYear] = React.useState(academic_years?.[0] || '');
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
+  // Edit form
   const {
     register: editRegister,
     handleSubmit: editHandleSubmit,
@@ -78,6 +94,7 @@ const FeeTable = ({ data, academic_years }) => {
     }
   });
 
+  // Add form
   const {
     register: addRegister,
     handleSubmit: addHandleSubmit,
@@ -100,6 +117,27 @@ const FeeTable = ({ data, academic_years }) => {
     }
   });
 
+  // Quick Setup form
+  const {
+    register: quickRegister,
+    handleSubmit: quickHandleSubmit,
+    formState: { errors: quickErrors },
+    reset: quickReset,
+  } = useForm({
+    resolver: zodResolver(QuickSetupSchema),
+    mode: 'onSubmit',
+    defaultValues: {
+      academicYear: defaultAcademicYear,
+      tuitionFeeMonthly: '',
+      transportFeeMonthly: '',
+      examFeeYearly: '',
+      admissionFee: '',
+      booksFee: '',
+      idCardFee: '',
+      activityFee: '',
+    }
+  });
+
   const filteredData = data
     .filter(item => item.academicYear === selectedYear)
     .sort((a, b) => parseInt(a.class) - parseInt(b.class));
@@ -110,6 +148,7 @@ const FeeTable = ({ data, academic_years }) => {
     });
   };
 
+  // Edit handlers
   const handleEditOpen = (item) => {
     setSelectedItem(item);
     editReset({
@@ -152,6 +191,7 @@ const FeeTable = ({ data, academic_years }) => {
     }).catch(() => { }).finally(() => setIsLoading(false));
   };
 
+  // Add handlers
   const handleAddClose = () => {
     addReset();
     setAddOpen(false);
@@ -179,6 +219,7 @@ const FeeTable = ({ data, academic_years }) => {
     }).catch(() => { }).finally(() => setIsLoading(false));
   };
 
+  // Delete handlers
   const onDelete = async () => {
     const promise = fetch("/api/fee_structure/DeleteFeeStructure", {
       method: "DELETE",
@@ -201,9 +242,78 @@ const FeeTable = ({ data, academic_years }) => {
     }).catch(() => { });
   };
 
+  // Quick Setup handlers
+  const handleQuickSetupClose = () => {
+    quickReset();
+    setQuickSetupOpen(false);
+  };
+
+  const onQuickSetupSubmit = async (formData) => {
+    setIsLoading(true);
+    try {
+      const checkRes = await fetch("/api/fee_structure/CheckYear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ academicYear: formData.academicYear }),
+      });
+      const checkResult = await checkRes.json();
+
+      if (!checkRes.ok) throw new Error(checkResult.error || 'Check failed');
+
+      if (checkResult.isComplete) {
+        toast.error(`Fee structure for ${formData.academicYear} is already complete`);
+        setIsLoading(false);
+        return;
+      }
+
+      if (checkResult.isEmpty) {
+        // No conflict — run directly
+        await runQuickSetup(formData, 'skip');
+      } else {
+        // Partial — show conflict dialog
+        setPendingFormData(formData);
+        setConflictData({
+          existingClasses: checkResult.existingClasses,
+          missingClasses: checkResult.missingClasses,
+        });
+        setQuickSetupOpen(false);
+        setConflictOpen(true);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      toast.error(error.message || 'Something went wrong');
+      setIsLoading(false);
+    }
+  };
+
+  const runQuickSetup = async (formData, mode) => {
+    setIsLoading(true);
+    const promise = fetch("/api/fee_structure/QuickSetup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...formData, mode }),
+    }).then(async (res) => {
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Quick setup failed');
+      return result;
+    });
+
+    toast.promise(promise, {
+      loading: 'Setting up fee structure...',
+      success: 'Quick setup completed!',
+      error: (err) => `Error: ${err.message}`,
+    }).then(() => {
+      handleQuickSetupClose();
+      setConflictOpen(false);
+      setPendingFormData(null);
+      refreshData();
+    }).catch(() => { }).finally(() => setIsLoading(false));
+  };
+
   return (
     <div className='flex flex-col w-full h-full p-3 sm:p-6 space-y-4 sm:space-y-6'>
 
+      {/* Header */}
       <header className='bg-white border-b border-gray-100 rounded-2xl shadow-md w-full flex flex-col sm:flex-row justify-between px-4 sm:px-8 py-4 gap-4 items-start sm:items-center'>
         <div className='flex items-center gap-3'>
           <span className='font-bold text-sm sm:text-base whitespace-nowrap'>Academic year:</span>
@@ -218,11 +328,12 @@ const FeeTable = ({ data, academic_years }) => {
         </div>
         <div className='flex flex-wrap gap-2'>
           <Button variant='soft' size="2"><FileAxis3d size={16} /><span className='ml-1'>Copy Year</span></Button>
-          <Button variant='outline' size="2"><Zap size={16} /><span className='ml-1'>Quick Setup</span></Button>
+          <Button variant='outline' size="2" onClick={() => setQuickSetupOpen(true)}><Zap size={16} /><span className='ml-1'>Quick Setup</span></Button>
           <Button onClick={() => setAddOpen(true)} size="2"><Plus size={16} /><span className='ml-1'>Add Manually</span></Button>
         </div>
       </header>
 
+      {/* Table */}
       <div className='w-full overflow-x-auto rounded-xl'>
         {filteredData.length === 0 && !isPending ? (
           <div className='flex flex-col items-center justify-center py-16 text-gray-400 gap-2'>
@@ -274,6 +385,119 @@ const FeeTable = ({ data, academic_years }) => {
         )}
       </div>
 
+      {/* Quick Setup Dialog */}
+      <Dialog.Root open={quickSetupOpen} onOpenChange={(val) => { if (!val) handleQuickSetupClose(); }}>
+        <Dialog.Content size="4">
+          <Dialog.Title>Quick Setup</Dialog.Title>
+          <Dialog.Description size="2" mb="4">
+            Set same fee values for all 12 classes for a specific academic year.
+          </Dialog.Description>
+          <Flex direction="column" gap="3">
+            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
+
+              <InputField label="Academic Year" error={quickErrors.academicYear} required>
+                <input
+                  type="text"
+                  {...quickRegister("academicYear")}
+                  placeholder="e.g. 2026-2027"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                />
+              </InputField>
+
+              <InputField label="Tuition Monthly Fee" error={quickErrors.tuitionFeeMonthly} required>
+                <input type="number" {...quickRegister("tuitionFeeMonthly", { valueAsNumber: true })} placeholder="Enter tuition monthly fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+              <InputField label="Transport Monthly Fee" error={quickErrors.transportFeeMonthly} required>
+                <input type="number" {...quickRegister("transportFeeMonthly", { valueAsNumber: true })} placeholder="Enter transport monthly fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+              <InputField label="Exam Yearly Fee" error={quickErrors.examFeeYearly} required>
+                <input type="number" {...quickRegister("examFeeYearly", { valueAsNumber: true })} placeholder="Enter exam yearly fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+              <InputField label="Admission One-Time Fee" error={quickErrors.admissionFee} required>
+                <input type="number" {...quickRegister("admissionFee", { valueAsNumber: true })} placeholder="Enter admission one-time fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+              <InputField label="Book Fee" error={quickErrors.booksFee} required>
+                <input type="number" {...quickRegister("booksFee", { valueAsNumber: true })} placeholder="Enter book fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+              <InputField label="ID Card Fee" error={quickErrors.idCardFee} required>
+                <input type="number" {...quickRegister("idCardFee", { valueAsNumber: true })} placeholder="Enter ID card fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+              <InputField label="Activity Fee" error={quickErrors.activityFee} required>
+                <input type="number" {...quickRegister("activityFee", { valueAsNumber: true })} placeholder="Enter activity fee" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
+              </InputField>
+
+            </div>
+          </Flex>
+          <Flex gap="3" mt="4" justify="end">
+            <Button variant="soft" color="gray" disabled={isLoading} onClick={handleQuickSetupClose}>Cancel</Button>
+            <Button onClick={quickHandleSubmit(onQuickSetupSubmit)} disabled={isLoading} loading={isLoading}>
+              <Zap size={16} /> Next
+            </Button>
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
+
+      {/* Conflict Dialog */}
+      <AlertDialog.Root open={conflictOpen} onOpenChange={setConflictOpen}>
+        <AlertDialog.Content maxWidth="500px">
+          <AlertDialog.Title>Fee Structure Conflict</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            Some classes already exist for <strong>{pendingFormData?.academicYear}</strong>.
+          </AlertDialog.Description>
+
+          <div className='mt-3 space-y-2'>
+            {conflictData.existingClasses.length > 0 && (
+              <Callout.Root color="orange" size="1">
+                <Callout.Icon><Info size={16} /></Callout.Icon>
+                <Callout.Text>
+                  Already exist: Class {conflictData.existingClasses.join(', ')}
+                </Callout.Text>
+              </Callout.Root>
+            )}
+            {conflictData.missingClasses.length > 0 && (
+              <Callout.Root color="blue" size="1">
+                <Callout.Icon><Info size={16} /></Callout.Icon>
+                <Callout.Text>
+                  Missing: Class {conflictData.missingClasses.join(', ')}
+                </Callout.Text>
+              </Callout.Root>
+            )}
+          </div>
+
+          <Flex gap="3" mt="4" justify="end" wrap="wrap">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray" onClick={() => { setConflictOpen(false); setPendingFormData(null); }}>
+                Abort
+              </Button>
+            </AlertDialog.Cancel>
+            <Button
+              variant="outline"
+              color="blue"
+              disabled={isLoading}
+              loading={isLoading}
+              onClick={() => runQuickSetup(pendingFormData, 'skip')}
+            >
+              Skip Existing
+            </Button>
+            <Button
+              color="red"
+              disabled={isLoading}
+              loading={isLoading}
+              onClick={() => runQuickSetup(pendingFormData, 'override')}
+            >
+              Override All
+            </Button>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+
+      {/* Add Manually Dialog */}
       <Dialog.Root open={addOpen} onOpenChange={(val) => { if (!val) handleAddClose(); }}>
         <Dialog.Content size="4">
           <Dialog.Title>Add Fee Structure</Dialog.Title>
@@ -302,12 +526,7 @@ const FeeTable = ({ data, academic_years }) => {
               </InputField>
 
               <InputField label="Academic Year" error={addErrors.academicYear} required>
-                <input
-                  type="text"
-                  {...addRegister("academicYear")}
-                  placeholder="e.g. 2026-2027"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                />
+                <input type="text" {...addRegister("academicYear")} placeholder="e.g. 2026-2027" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
               </InputField>
 
               <InputField label="Tuition Monthly Fee" error={addErrors.tuitionFeeMonthly} required>
@@ -347,6 +566,7 @@ const FeeTable = ({ data, academic_years }) => {
         </Dialog.Content>
       </Dialog.Root>
 
+      {/* Edit Dialog */}
       <Dialog.Root open={editOpen} onOpenChange={(val) => { if (!val) handleEditClose(); }}>
         <Dialog.Content size="4">
           <Dialog.Title>Edit Fee Structure</Dialog.Title>
@@ -383,6 +603,7 @@ const FeeTable = ({ data, academic_years }) => {
         </Dialog.Content>
       </Dialog.Root>
 
+      {/* Delete Dialog */}
       <AlertDialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialog.Content maxWidth="450px">
           <AlertDialog.Title>Delete this class Fee Structure?</AlertDialog.Title>
