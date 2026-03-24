@@ -148,6 +148,15 @@ const FeeTable = ({ data, academic_years }) => {
     });
   };
 
+  // Reusable full reset for quick setup flow
+  const resetQuickSetupState = () => {
+    quickReset();
+    setPendingFormData(null);
+    setConflictData({ existingClasses: [], missingClasses: [] });
+    setConflictOpen(false);
+    setQuickSetupOpen(false);
+  };
+
   // Edit handlers
   const handleEditOpen = (item) => {
     setSelectedItem(item);
@@ -243,11 +252,6 @@ const FeeTable = ({ data, academic_years }) => {
   };
 
   // Quick Setup handlers
-  const handleQuickSetupClose = () => {
-    quickReset();
-    setQuickSetupOpen(false);
-  };
-
   const onQuickSetupSubmit = async (formData) => {
     setIsLoading(true);
     try {
@@ -267,10 +271,8 @@ const FeeTable = ({ data, academic_years }) => {
       }
 
       if (checkResult.isEmpty) {
-        // No conflict — run directly
         await runQuickSetup(formData, 'skip');
       } else {
-        // Partial — show conflict dialog
         setPendingFormData(formData);
         setConflictData({
           existingClasses: checkResult.existingClasses,
@@ -303,9 +305,7 @@ const FeeTable = ({ data, academic_years }) => {
       success: 'Quick setup completed!',
       error: (err) => `Error: ${err.message}`,
     }).then(() => {
-      handleQuickSetupClose();
-      setConflictOpen(false);
-      setPendingFormData(null);
+      resetQuickSetupState();
       refreshData();
     }).catch(() => { }).finally(() => setIsLoading(false));
   };
@@ -386,7 +386,7 @@ const FeeTable = ({ data, academic_years }) => {
       </div>
 
       {/* Quick Setup Dialog */}
-      <Dialog.Root open={quickSetupOpen} onOpenChange={(val) => { if (!val) handleQuickSetupClose(); }}>
+      <Dialog.Root open={quickSetupOpen} onOpenChange={(val) => { if (!val) resetQuickSetupState(); }}>
         <Dialog.Content size="4">
           <Dialog.Title>Quick Setup</Dialog.Title>
           <Dialog.Description size="2" mb="4">
@@ -396,12 +396,7 @@ const FeeTable = ({ data, academic_years }) => {
             <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
 
               <InputField label="Academic Year" error={quickErrors.academicYear} required>
-                <input
-                  type="text"
-                  {...quickRegister("academicYear")}
-                  placeholder="e.g. 2026-2027"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                />
+                <input type="text" {...quickRegister("academicYear")} placeholder="e.g. 2026-2027" className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
               </InputField>
 
               <InputField label="Tuition Monthly Fee" error={quickErrors.tuitionFeeMonthly} required>
@@ -435,7 +430,7 @@ const FeeTable = ({ data, academic_years }) => {
             </div>
           </Flex>
           <Flex gap="3" mt="4" justify="end">
-            <Button variant="soft" color="gray" disabled={isLoading} onClick={handleQuickSetupClose}>Cancel</Button>
+            <Button variant="soft" color="gray" disabled={isLoading} onClick={resetQuickSetupState}>Cancel</Button>
             <Button onClick={quickHandleSubmit(onQuickSetupSubmit)} disabled={isLoading} loading={isLoading}>
               <Zap size={16} /> Next
             </Button>
@@ -455,42 +450,27 @@ const FeeTable = ({ data, academic_years }) => {
             {conflictData.existingClasses.length > 0 && (
               <Callout.Root color="orange" size="1">
                 <Callout.Icon><Info size={16} /></Callout.Icon>
-                <Callout.Text>
-                  Already exist: Class {conflictData.existingClasses.join(', ')}
-                </Callout.Text>
+                <Callout.Text>Already exist: Class {conflictData.existingClasses.join(', ')}</Callout.Text>
               </Callout.Root>
             )}
             {conflictData.missingClasses.length > 0 && (
               <Callout.Root color="blue" size="1">
                 <Callout.Icon><Info size={16} /></Callout.Icon>
-                <Callout.Text>
-                  Missing: Class {conflictData.missingClasses.join(', ')}
-                </Callout.Text>
+                <Callout.Text>Missing: Class {conflictData.missingClasses.join(', ')}</Callout.Text>
               </Callout.Root>
             )}
           </div>
 
           <Flex gap="3" mt="4" justify="end" wrap="wrap">
             <AlertDialog.Cancel>
-              <Button variant="soft" color="gray" onClick={() => { setConflictOpen(false); setPendingFormData(null); }}>
+              <Button variant="soft" color="gray" onClick={resetQuickSetupState}>
                 Abort
               </Button>
             </AlertDialog.Cancel>
-            <Button
-              variant="outline"
-              color="blue"
-              disabled={isLoading}
-              loading={isLoading}
-              onClick={() => runQuickSetup(pendingFormData, 'skip')}
-            >
+            <Button variant="outline" color="blue" disabled={isLoading} loading={isLoading} onClick={() => runQuickSetup(pendingFormData, 'skip')}>
               Skip Existing
             </Button>
-            <Button
-              color="red"
-              disabled={isLoading}
-              loading={isLoading}
-              onClick={() => runQuickSetup(pendingFormData, 'override')}
-            >
+            <Button color="red" disabled={isLoading} loading={isLoading} onClick={() => runQuickSetup(pendingFormData, 'override')}>
               Override All
             </Button>
           </Flex>
@@ -506,23 +486,19 @@ const FeeTable = ({ data, academic_years }) => {
             <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
 
               <InputField label="Class" error={addErrors.class} required>
-                <Controller
-                  name="class"
-                  control={addControl}
-                  render={({ field }) => (
-                    <Select.Root size="3" value={field.value} onValueChange={field.onChange}>
-                      <Select.Trigger className="w-full" placeholder="Select class" />
-                      <Select.Content>
-                        <Select.Group>
-                          <Select.Label>Select Class</Select.Label>
-                          {Array.from({ length: 12 }, (_, i) => (
-                            <Select.Item key={i + 1} value={String(i + 1)}>Class {i + 1}</Select.Item>
-                          ))}
-                        </Select.Group>
-                      </Select.Content>
-                    </Select.Root>
-                  )}
-                />
+                <Controller name="class" control={addControl} render={({ field }) => (
+                  <Select.Root size="3" value={field.value} onValueChange={field.onChange}>
+                    <Select.Trigger className="w-full" placeholder="Select class" />
+                    <Select.Content>
+                      <Select.Group>
+                        <Select.Label>Select Class</Select.Label>
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <Select.Item key={i + 1} value={String(i + 1)}>Class {i + 1}</Select.Item>
+                        ))}
+                      </Select.Group>
+                    </Select.Content>
+                  </Select.Root>
+                )} />
               </InputField>
 
               <InputField label="Academic Year" error={addErrors.academicYear} required>
