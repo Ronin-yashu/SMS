@@ -13,8 +13,16 @@ import { useTransition } from 'react';
 const currentYear = new Date().getFullYear();
 const defaultAcademicYear = `${currentYear}-${currentYear + 1}`;
 
+const academicYearSchema = z.string()
+    .min(1, 'Academic year is required')
+    .regex(/^\d{4}-\d{4}$/, 'Format must be YYYY-YYYY (e.g. 2026-2027)')
+    .refine((val) => {
+        const [start, end] = val.split('-').map(Number);
+        return end === start + 1;
+    }, 'End year must be exactly 1 year after start year');
+
 const QuickSetupSchema = z.object({
-    academicYear: z.string().min(1, 'Academic year is required'),
+    academicYear: academicYearSchema,
     tuitionFeeMonthly: z.number({ invalid_type_error: 'Tuition fee is required' }).int().positive(),
     transportFeeMonthly: z.number({ invalid_type_error: 'Transport fee is required' }).int().positive(),
     examFeeYearly: z.number({ invalid_type_error: 'Exam yearly fee is required' }).int().positive(),
@@ -26,7 +34,7 @@ const QuickSetupSchema = z.object({
 
 const AddFeeStructureSchema = z.object({
     class: z.string().min(1, 'Class is required'),
-    academicYear: z.string().min(1, 'Academic year is required'),
+    academicYear: academicYearSchema,
     tuitionFeeMonthly: z.number({ invalid_type_error: 'Tuition fee is required' }).int().positive(),
     transportFeeMonthly: z.number({ invalid_type_error: 'Transport fee is required' }).int().positive(),
     examFeeYearly: z.number({ invalid_type_error: 'Exam yearly fee is required' }).int().positive(),
