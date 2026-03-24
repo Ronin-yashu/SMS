@@ -84,6 +84,9 @@ const FeeTable = ({ data, academic_years }) => {
   const [copyConflictData, setCopyConflictData] = React.useState({ existingClasses: [], missingClasses: [] });
   const [pendingCopyData, setPendingCopyData] = React.useState(null);
 
+  // Delete Year state
+  const [deleteYearOpen, setDeleteYearOpen] = React.useState(false);
+
   // Edit form
   const {
     register: editRegister,
@@ -269,6 +272,28 @@ const FeeTable = ({ data, academic_years }) => {
     }).catch(() => { }).finally(() => setIsLoading(false));
   };
 
+  // Delete Year handler
+  const onDeleteYear = async () => {
+    const promise = fetch("/api/fee_structure/DeleteYear", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ academicYear: selectedYear }),
+    }).then(async (res) => {
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Delete failed');
+      return result;
+    });
+
+    toast.promise(promise, {
+      loading: `Deleting ${selectedYear} fee structure...`,
+      success: (res) => `Deleted ${res.deleted} classes from ${selectedYear}!`,
+      error: (err) => `Error: ${err.message}`,
+    }).then(() => {
+      setDeleteYearOpen(false);
+      refreshData();
+    }).catch(() => { });
+  };
+
   // Edit handlers
   const handleEditOpen = (item) => {
     setSelectedItem(item);
@@ -440,6 +465,7 @@ const FeeTable = ({ data, academic_years }) => {
         </div>
         <div className='flex flex-wrap gap-2'>
           <Button variant='soft' size="2" onClick={() => setCopyOpen(true)}><Copy size={16} /><span className='ml-1'>Copy Year</span></Button>
+          <Button variant='soft' color='red' size="2" disabled={filteredData.length === 0} onClick={() => setDeleteYearOpen(true)}><Trash size={16} /><span className='ml-1'>Delete Year</span></Button>
           <Button variant='outline' size="2" onClick={() => setQuickSetupOpen(true)}><Zap size={16} /><span className='ml-1'>Quick Setup</span></Button>
           <Button onClick={() => setAddOpen(true)} size="2"><Plus size={16} /><span className='ml-1'>Add Manually</span></Button>
         </div>
@@ -639,6 +665,26 @@ const FeeTable = ({ data, academic_years }) => {
             <Button color="red" disabled={isLoading} loading={isLoading} onClick={() => runCopy(pendingCopyData, 'override')}>
               Override All
             </Button>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+
+      {/* Delete Year Confirm Dialog */}
+      <AlertDialog.Root open={deleteYearOpen} onOpenChange={setDeleteYearOpen}>
+        <AlertDialog.Content maxWidth="450px">
+          <AlertDialog.Title>Delete {selectedYear} Fee Structure?</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            This will permanently delete all <strong>{filteredData.length} class fee structures</strong> for <strong>{selectedYear}</strong>. This action cannot be undone.
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray" onClick={() => setDeleteYearOpen(false)}>Cancel</Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button variant="solid" color="red" onClick={onDeleteYear}>
+                <Trash size={16} /> Delete All
+              </Button>
+            </AlertDialog.Action>
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>
