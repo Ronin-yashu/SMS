@@ -8,7 +8,7 @@ import InputField from '@/components/InputField';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { Select, Button, Table, Dialog, Flex, AlertDialog, Skeleton, Callout } from '@radix-ui/themes'
-import { Zap, Plus, FileAxis3d, SquarePen, Trash, Info } from 'lucide-react'
+import { Zap, Plus, SquarePen, Trash, Info, Copy } from 'lucide-react'
 
 const EditFeeStructureSchema = z.object({
   tuitionFeeMonthly: z.number({ invalid_type_error: 'Tuition fee is required' }).int().positive(),
@@ -73,6 +73,16 @@ const FeeTable = ({ data, academic_years }) => {
   const [selectedYear, setSelectedYear] = React.useState(academic_years?.[0] || '');
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
+  // Copy Year state
+  const [copyOpen, setCopyOpen] = React.useState(false);
+  const [copyToYear, setCopyToYear] = React.useState('');
+  const [copyToYearError, setCopyToYearError] = React.useState('');
+  const [increasePercent, setIncreasePercent] = React.useState(0);
+  const [customPercent, setCustomPercent] = React.useState('');
+  const [copyConflictOpen, setCopyConflictOpen] = React.useState(false);
+  const [copyConflictData, setCopyConflictData] = React.useState({ existingClasses: [], missingClasses: [] });
+  const [pendingCopyData, setPendingCopyData] = React.useState(null);
 
   // Edit form
   const {
@@ -155,6 +165,108 @@ const FeeTable = ({ data, academic_years }) => {
     setConflictData({ existingClasses: [], missingClasses: [] });
     setConflictOpen(false);
     setQuickSetupOpen(false);
+  };
+
+  // Copy Year helpers
+  const getEffectivePercent = () => {
+    if (increasePercent === 'custom') {
+      const val = parseFloat(customPercent);
+      return isNaN(val) ? 0 : val;
+    }
+    return increasePercent;
+  };
+
+  const previewItems = filteredData.slice(0, 3).map(item => ({
+    label: `Class ${item.class} Tuition`,
+    old: item.tuitionFeeMonthly,
+    new: Math.round(item.tuitionFeeMonthly * (1 + getEffectivePercent() / 100)),
+  }));
+
+  if (filteredData.length > 0) {
+    const examItem = filteredData[0];
+    previewItems.push({
+      label: `Exam Fee (all)`,
+      old: examItem.examFeeYearly,
+      new: Math.round(examItem.examFeeYearly * (1 + getEffectivePercent() / 100)),
+    });
+  }
+
+  const resetCopyState = () => {
+    setCopyOpen(false);
+    setCopyToYear('');
+    setCopyToYearError('');
+    setIncreasePercent(0);
+    setCustomPercent('');
+    setCopyConflictOpen(false);
+    setCopyConflictData({ existingClasses: [], missingClasses: [] });
+    setPendingCopyData(null);
+  };
+
+  const onCopySubmit = async () => {
+    if (!copyToYear.trim()) {
+      setCopyToYearError('Target year is required');
+      return;
+    }
+    if (copyToYear.trim() === selectedYear) {
+      setCopyToYearError('Target year cannot be same as source year');
+      return;
+    }
+    setCopyToYearError('');
+    setIsLoading(true);
+
+    try {
+      const checkRes = await fetch("/api/fee_structure/CheckYear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ academicYear: copyToYear.trim() }),
+      });
+      const checkResult = await checkRes.json();
+      if (!checkRes.ok) throw new Error(checkResult.error || 'Check failed');
+
+      const payload = {
+        fromYear: selectedYear,
+        toYear: copyToYear.trim(),
+        increasePercent: getEffectivePercent(),
+      };
+
+      if (checkResult.isEmpty) {
+        await runCopy(payload, 'skip');
+      } else {
+        setPendingCopyData(payload);
+        setCopyConflictData({
+          existingClasses: checkResult.existingClasses,
+          missingClasses: checkResult.missingClasses,
+        });
+        setCopyOpen(false);
+        setCopyConflictOpen(true);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      toast.error(error.message || 'Something went wrong');
+      setIsLoading(false);
+    }
+  };
+
+  const runCopy = async (payload, mode) => {
+    setIsLoading(true);
+    const promise = fetch("/api/fee_structure/CopyYear", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...payload, mode }),
+    }).then(async (res) => {
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Copy failed');
+      return result;
+    });
+
+    toast.promise(promise, {
+      loading: 'Copying fee structure...',
+      success: (res) => `Copied ${res.copied} classes to ${payload.toYear}!`,
+      error: (err) => `Error: ${err.message}`,
+    }).then(() => {
+      resetCopyState();
+      refreshData();
+    }).catch(() => { }).finally(() => setIsLoading(false));
   };
 
   // Edit handlers
@@ -327,7 +439,7 @@ const FeeTable = ({ data, academic_years }) => {
           </Select.Root>
         </div>
         <div className='flex flex-wrap gap-2'>
-          <Button variant='soft' size="2"><FileAxis3d size={16} /><span className='ml-1'>Copy Year</span></Button>
+          <Button variant='soft' size="2" onClick={() => setCopyOpen(true)}><Copy size={16} /><span className='ml-1'>Copy Year</span></Button>
           <Button variant='outline' size="2" onClick={() => setQuickSetupOpen(true)}><Zap size={16} /><span className='ml-1'>Quick Setup</span></Button>
           <Button onClick={() => setAddOpen(true)} size="2"><Plus size={16} /><span className='ml-1'>Add Manually</span></Button>
         </div>
@@ -384,6 +496,152 @@ const FeeTable = ({ data, academic_years }) => {
           </Table.Root>
         )}
       </div>
+
+      {/* Copy Year Dialog */}
+      <Dialog.Root open={copyOpen} onOpenChange={(val) => { if (!val) resetCopyState(); }}>
+        <Dialog.Content size="3" style={{ maxWidth: 560 }}>
+          <Dialog.Title>📋 Copy Fee Structure to New Year</Dialog.Title>
+          <Dialog.Description size="2" mb="4">
+            Copy all fee structures from <strong>{selectedYear}</strong> to a new academic year with an optional fee increase.
+          </Dialog.Description>
+
+          <Flex direction="column" gap="4">
+            <div className="grid grid-cols-2 gap-4">
+              <InputField label="Copy FROM Year">
+                <input
+                  type="text"
+                  value={selectedYear}
+                  readOnly
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed outline-none"
+                />
+              </InputField>
+              <InputField label="Copy TO Year *" error={copyToYearError ? { message: copyToYearError } : null}>
+                <input
+                  type="text"
+                  value={copyToYear}
+                  onChange={(e) => { setCopyToYear(e.target.value); setCopyToYearError(''); }}
+                  placeholder="e.g. 2026-2027"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                />
+              </InputField>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">Apply Fee Increase <span className="text-gray-400 font-normal">(Optional)</span></p>
+              <p className="text-xs text-gray-500 mb-3">Increase all fees by:</p>
+              <div className="flex flex-wrap gap-2">
+                {[0, 5, 10].map((pct) => (
+                  <button
+                    key={pct}
+                    type="button"
+                    onClick={() => { setIncreasePercent(pct); setCustomPercent(''); }}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                      increasePercent === pct && increasePercent !== 'custom'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
+                    }`}
+                  >
+                    {pct === 0 ? '0% — No change' : pct === 5 ? '5% — Moderate' : '10% — Standard'}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setIncreasePercent('custom')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                    increasePercent === 'custom'
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
+                  }`}
+                >
+                  Custom — ...
+                </button>
+              </div>
+              {increasePercent === 'custom' && (
+                <input
+                  type="number"
+                  value={customPercent}
+                  onChange={(e) => setCustomPercent(e.target.value)}
+                  placeholder="Enter custom % e.g. 7.5"
+                  className="mt-2 w-40 px-3 py-2 border-2 border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none text-sm"
+                />
+              )}
+            </div>
+
+            {filteredData.length > 0 && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <p className="text-xs font-semibold text-gray-600 mb-2">
+                  Preview of changes ({getEffectivePercent()}% increase):
+                </p>
+                <div className="space-y-1">
+                  {previewItems.map((item, i) => (
+                    <div key={i} className="flex justify-between text-sm">
+                      <span className="text-gray-600">{item.label}</span>
+                      <span className="font-medium text-green-700">
+                        ₹{item.old.toLocaleString()} → ₹{item.new.toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                  {filteredData.length > 3 && (
+                    <p className="text-xs text-gray-400 mt-1">... and {filteredData.length - 3} more classes</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <Callout.Root color="blue" size="1">
+              <Callout.Icon><Info size={14} /></Callout.Icon>
+              <Callout.Text>
+                {filteredData.length} fee structures from {selectedYear} will be copied to {copyToYear || '...'}.
+                <br />Existing records for {copyToYear || '...'} (if any) will NOT be overwritten.
+              </Callout.Text>
+            </Callout.Root>
+          </Flex>
+
+          <Flex gap="3" mt="4" justify="end">
+            <Button variant="soft" color="gray" disabled={isLoading} onClick={resetCopyState}>Cancel</Button>
+            <Button onClick={onCopySubmit} disabled={isLoading || filteredData.length === 0} loading={isLoading}>
+              <Copy size={16} /> Copy Now
+            </Button>
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
+
+      {/* Copy Year Conflict Dialog */}
+      <AlertDialog.Root open={copyConflictOpen} onOpenChange={setCopyConflictOpen}>
+        <AlertDialog.Content maxWidth="500px">
+          <AlertDialog.Title>Fee Structure Conflict</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            Some classes already exist for <strong>{pendingCopyData?.toYear}</strong>.
+          </AlertDialog.Description>
+
+          <div className='mt-3 space-y-2'>
+            {copyConflictData.existingClasses.length > 0 && (
+              <Callout.Root color="orange" size="1">
+                <Callout.Icon><Info size={16} /></Callout.Icon>
+                <Callout.Text>Already exist: Class {copyConflictData.existingClasses.join(', ')}</Callout.Text>
+              </Callout.Root>
+            )}
+            {copyConflictData.missingClasses.length > 0 && (
+              <Callout.Root color="blue" size="1">
+                <Callout.Icon><Info size={16} /></Callout.Icon>
+                <Callout.Text>Will be copied: Class {copyConflictData.missingClasses.join(', ')}</Callout.Text>
+              </Callout.Root>
+            )}
+          </div>
+
+          <Flex gap="3" mt="4" justify="end" wrap="wrap">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray" onClick={resetCopyState}>Abort</Button>
+            </AlertDialog.Cancel>
+            <Button variant="outline" color="blue" disabled={isLoading} loading={isLoading} onClick={() => runCopy(pendingCopyData, 'skip')}>
+              Skip Existing
+            </Button>
+            <Button color="red" disabled={isLoading} loading={isLoading} onClick={() => runCopy(pendingCopyData, 'override')}>
+              Override All
+            </Button>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
 
       {/* Quick Setup Dialog */}
       <Dialog.Root open={quickSetupOpen} onOpenChange={(val) => { if (!val) resetQuickSetupState(); }}>
