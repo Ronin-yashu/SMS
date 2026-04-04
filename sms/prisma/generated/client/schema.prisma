@@ -49,6 +49,7 @@ model School {
   parents       Parent[]
   feeStructures FeeStructure[]
   routes        Route[]
+  notifications Notification[]
 
   @@index([schoolCode])
   @@index([adminEmail])
@@ -110,6 +111,7 @@ model Student {
   documents       Document[]
   studentFees     StudentFee[]
   feePayments     FeePayment[]
+  notifications   Notification[]
 
   @@index([schoolId, status])
   @@index([admissionNumber])
@@ -227,6 +229,7 @@ model StudentFee {
   transportFee       Int      @default(0)
   examFee            Int      @default(0)
   admissionFee       Int      @default(0)
+  booksFee           Int      @default(0)
   otherFees          Int      @default(0)
   discountPercentage Int      @default(0)
   discountAmount     Int      @default(0)
@@ -306,4 +309,27 @@ model Route {
   students Student[]
 
   @@index([schoolId, isActive])
+}
+
+model Notification {
+  id          String    @id @default(cuid())
+  type        String
+  channel     String
+  status      String    @default("PENDING")
+  messageBody String
+  triggeredBy String    @default("AUTO")
+  sentAt      DateTime?
+  failReason  String?
+  retryCount  Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  studentId   String
+  schoolId    String
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, type])
+  @@index([schoolId, status])
+  @@index([status, createdAt])
 }

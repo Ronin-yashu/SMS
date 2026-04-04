@@ -290,6 +290,7 @@ exports.Prisma.StudentFeeScalarFieldEnum = {
   transportFee: 'transportFee',
   examFee: 'examFee',
   admissionFee: 'admissionFee',
+  booksFee: 'booksFee',
   otherFees: 'otherFees',
   discountPercentage: 'discountPercentage',
   discountAmount: 'discountAmount',
@@ -346,6 +347,22 @@ exports.Prisma.RouteScalarFieldEnum = {
   schoolId: 'schoolId'
 };
 
+exports.Prisma.NotificationScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  channel: 'channel',
+  status: 'status',
+  messageBody: 'messageBody',
+  triggeredBy: 'triggeredBy',
+  sentAt: 'sentAt',
+  failReason: 'failReason',
+  retryCount: 'retryCount',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  studentId: 'studentId',
+  schoolId: 'schoolId'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -373,7 +390,8 @@ exports.Prisma.ModelName = {
   StudentFee: 'StudentFee',
   FeeInstallment: 'FeeInstallment',
   FeePayment: 'FeePayment',
-  Route: 'Route'
+  Route: 'Route',
+  Notification: 'Notification'
 };
 
 /**
