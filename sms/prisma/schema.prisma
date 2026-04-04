@@ -227,6 +227,7 @@ model StudentFee {
   transportFee       Int       @default(0)
   examFee            Int       @default(0)
   admissionFee       Int       @default(0)
+  booksFee           Int       @default(0)
   otherFees          Int       @default(0)
   discountPercentage Int       @default(0)
   discountAmount     Int       @default(0)
@@ -239,7 +240,7 @@ model StudentFee {
   updatedAt          DateTime  @updatedAt
   studentId          String
 
-  student            Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student            Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
   installments       FeeInstallment[]
 
   @@unique([studentId, academicYear])
