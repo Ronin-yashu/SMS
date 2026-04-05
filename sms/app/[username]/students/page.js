@@ -1,11 +1,7 @@
-import React from 'react'
+import StudentTable from '@/components/StudentTable'
 
-const page = () => {
-    return (
-        <div>
-            hey you are on student page
-        </div>
-    )
+export const metadata = { title: 'Students' }
+
+export default function StudentsPage() {
+  return <StudentTable />
 }
-
-export default page
