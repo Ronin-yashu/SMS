@@ -833,59 +833,6 @@ export default function StudentTable({ data = [], classes = [], academicYears = 
         )}
       </div>
 
-      {/* ── Pagination ── */}
-      {totalPages > 1 && (
-        <Flex justify="between" align="center" className="text-sm text-gray-500 px-1">
-          <span>
-            Showing {Math.min((page - 1) * PER_PAGE + 1, filtered.length)}–{Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}
-          </span>
-          <Flex gap="2">
-            <Button variant="soft" color="gray" size="2" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
-              <ChevronLeft size={15} />
-            </Button>
-            <span className="flex items-center px-2 text-xs font-medium">{page} / {totalPages}</span>
-            <Button variant="soft" color="gray" size="2" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
-              <ChevronRight size={15} />
-            </Button>
-          </Flex>
-        </Flex>
-      )}
-
-      {/* ── Drawers & Dialogs ── */}
-      <AddStudentDrawer open={addOpen} onClose={() => setAddOpen(false)} onSuccess={() => refresh()} />
-
-      <EditStudentDialog
-        open={editOpen}
-        onClose={() => { setEditOpen(false); setSelected(null) }}
-        student={selected}
-        onSuccess={() => refresh()}
-      />
-
-      <AlertDialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialog.Content maxWidth="450px">
-          <AlertDialog.Title>Delete Student?</AlertDialog.Title>
-          <AlertDialog.Description size="2">
-            Are you sure you want to permanently delete{' '}
-            <strong>{selected?.firstName} {selected?.lastName}</strong>?{' '}
-            This will also remove all associated fee and document records. This action cannot be undone.
-          </AlertDialog.Description>
-          <Callout.Root color="red" size="1" mt="3">
-            <Callout.Icon><AlertCircle size={14} /></Callout.Icon>
-            <Callout.Text>All fee records, documents and academic history will be deleted.</Callout.Text>
-          </Callout.Root>
-          <Flex gap="3" mt="4" justify="end">
-            <AlertDialog.Cancel>
-              <Button variant="soft" color="gray" onClick={() => setDeleteOpen(false)}>Cancel</Button>
-            </AlertDialog.Cancel>
-            <AlertDialog.Action>
-              <Button variant="solid" color="red" onClick={onDelete}>
-                <Trash2 size={15} /> Delete Student
-              </Button>
-            </AlertDialog.Action>
-          </Flex>
-        </AlertDialog.Content>
-      </AlertDialog.Root>
-
     </div>
   )
 }
